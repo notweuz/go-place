@@ -1,4 +1,4 @@
-package internal
+package server
 
 import (
 	"go-place/internal/config"
@@ -21,10 +21,7 @@ func NewApp(cfg *config.Config) *App {
 		log.Fatal().Err(err).Msg("Failed to start database!")
 	}
 
-	app := fiber.New(fiber.Config{
-		//ErrorHandler: handler.ErrorHandler,
-	})
-	//app.Use(middleware.Logging())
+	app := fiber.New(fiber.Config{})
 	app.Use(cors.New())
 
 	return &App{

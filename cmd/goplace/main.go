@@ -3,6 +3,7 @@ package main
 import (
 	"go-place/internal/config"
 	"go-place/internal/logger"
+	"go-place/internal/server"
 
 	"github.com/rs/zerolog/log"
 )
@@ -17,5 +18,6 @@ func main() {
 	}
 	logger.UpdateLogLevel(cfg.LogLevel)
 
-	//app := internal.NewApp(cfg)
+	app := server.NewApp(cfg)
+	_ = app
 }

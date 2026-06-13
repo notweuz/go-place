@@ -1,7 +1,7 @@
 package config
 
 import (
-	"go-place/internal/errors"
+	"go-place/internal/errs"
 	"os"
 	"strconv"
 
@@ -39,12 +39,12 @@ func NewConfig() (*Config, error) {
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		return nil, errors.ErrNoJWTSecretFound
+		return nil, errs.ErrNoJWTSecretFound
 	}
 
 	bcryptSalt := os.Getenv("BCRPYT_SALT")
 	if bcryptSalt == "" {
-		return nil, errors.ErrNoBCryptSaltFound
+		return nil, errs.ErrNoBCryptSaltFound
 	}
 
 	appPort, err := strconv.Atoi(os.Getenv("APP_PORT"))
