@@ -1,0 +1,13 @@
+package model
+
+import "time"
+
+type Setting struct {
+	ID               uint64 `gorm:"primaryKey;autoIncrement"`
+	CanvasWidth      uint64 `gorm:"not null;default:1000"`
+	CanvasHeight     uint64 `gorm:"not null;default:1000"`
+	CooldownSeconds  uint64 `gorm:"not null;default:30"`
+	RegistrationOpen bool   `gorm:"not null;default:true"`
+
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+}

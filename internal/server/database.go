@@ -23,6 +23,7 @@ func SetupDatabase(cfg *config.Config) (*gorm.DB, error) {
 	err = db.AutoMigrate(
 		&model.Pixel{},
 		&model.User{},
+		&model.Setting{},
 	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to migrate database")
