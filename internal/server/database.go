@@ -2,6 +2,7 @@ package server
 
 import (
 	"go-place/internal/config"
+	"go-place/internal/model"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
@@ -19,7 +20,10 @@ func SetupDatabase(cfg *config.Config) (*gorm.DB, error) {
 	}
 	log.Info().Msg("Connected to database")
 
-	err = db.AutoMigrate()
+	err = db.AutoMigrate(
+		&model.Pixel{},
+		&model.User{},
+	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}
