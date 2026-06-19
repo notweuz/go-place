@@ -3,13 +3,14 @@ package errs
 import "fmt"
 
 type AppError struct {
-	Kind    error
-	Err     error
-	Message string
+	Kind       error
+	Err        error
+	StatusCode int
+	Message    string
 }
 
 func (e *AppError) Error() string {
-	return fmt.Sprintf("%s: %s", e.Kind, e.Message)
+	return fmt.Sprintf("%s: %s (%d)", e.Kind, e.Message, e.StatusCode)
 }
 
 func (e *AppError) Unwrap() error {

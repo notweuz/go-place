@@ -2,6 +2,7 @@ package server
 
 import (
 	"go-place/internal/config"
+	"go-place/internal/middleware"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -21,7 +22,9 @@ func NewApp(cfg *config.Config) *App {
 		log.Fatal().Err(err).Msg("Failed to start database!")
 	}
 
-	app := fiber.New(fiber.Config{})
+	app := fiber.New(fiber.Config{
+		ErrorHandler: middleware.ErrorHandler,
+	})
 	app.Use(cors.New())
 
 	return &App{
