@@ -6,8 +6,8 @@ type Pixel struct {
 	ID     uint64 `gorm:"primaryKey;autoIncrement"`
 	X      uint64 `gorm:"not null"`
 	Y      uint64 `gorm:"not null"`
-	UserID uint64 `gorm:"not null"`
-	User   User   `gorm:"foreignKey:UserID;references:ID"`
+	UserID uint64
+	User   User `gorm:"foreignKey:UserID;references:ID"`
 	Color  string
 
 	CreatedAt time.Time `gorm:"autoCreateTime"`
