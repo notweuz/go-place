@@ -5,7 +5,7 @@ import "go-place/internal/model"
 type Service interface {
 	Create(user *model.User) (*model.User, error)
 	GetByID(id uint64) (*model.User, error)
-	GetAll() ([]model.User, error)
+	GetAll() []model.User
 	Update(user *model.User) (*model.User, error)
 	Delete(id uint64) error
 }
@@ -24,8 +24,7 @@ func (s service) GetByID(id uint64) (*model.User, error) {
 	panic("implement me")
 }
 
-func (s service) GetAll() ([]model.User, error) {
-	//TODO implement me
+func (s service) GetAll() []model.User {
 	panic("implement me")
 }
 
