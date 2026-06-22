@@ -21,7 +21,7 @@ type repository struct {
 	db *gorm.DB
 }
 
-func NewPixelRepository(db *gorm.DB) Repository {
+func NewRepository(db *gorm.DB) Repository {
 	return &repository{db: db}
 }
 
