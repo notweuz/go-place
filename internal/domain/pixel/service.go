@@ -13,3 +13,32 @@ type Service interface {
 type service struct {
 	repository Repository
 }
+
+func NewService(repository Repository) Service {
+	return &service{repository: repository}
+}
+
+func (s *service) Create(pixel *model.Pixel) (*model.Pixel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *service) GetByID(id uint64) (*model.Pixel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *service) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *service) Update(pixel *model.Pixel) (*model.Pixel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *service) Delete(id uint64) error {
+	//TODO implement me
+	panic("implement me")
+}
