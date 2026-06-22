@@ -1,6 +1,11 @@
 package pixel
 
-import "go-place/internal/model"
+import (
+	"go-place/internal/errs"
+	"go-place/internal/model"
+
+	"github.com/gofiber/fiber/v3"
+)
 
 type Service interface {
 	Create(pixel *model.Pixel) (*model.Pixel, error)
@@ -19,8 +24,11 @@ func NewService(repository Repository) Service {
 }
 
 func (s *service) Create(pixel *model.Pixel) (*model.Pixel, error) {
-	//TODO implement me
-	panic("implement me")
+	entity, err := s.repository.Create(pixel)
+	if err != nil {
+		return nil, errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't create pixel")
+	}
+	return entity, nil
 }
 
 func (s *service) GetByID(id uint64) (*model.Pixel, error) {
