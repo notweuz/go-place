@@ -6,7 +6,7 @@ type User struct {
 	ID       uint64  `gorm:"primaryKey;autoIncrement"`
 	Username string  `gorm:"not null;uniqueIndex;size:50"`
 	Password string  `gorm:"not null;size:24"`
-	Charges  int     `gorm:"not null"`
+	Charges  uint    `gorm:"not null"`
 	Pixels   []Pixel `gorm:"foreignKey:UserID"`
 
 	CreatedAt time.Time `gorm:"autoCreateTime"`
