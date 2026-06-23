@@ -23,7 +23,7 @@ func NewRepository(db *gorm.DB) Repository {
 	return &repository{db: db}
 }
 
-func (r repository) Create(user *model.User) (*model.User, error) {
+func (r *repository) Create(user *model.User) (*model.User, error) {
 	log.Debug().Uint64("user_id", user.ID).Str("username", user.Username).Msg("Creating user")
 	err := r.db.Create(user).Error
 	if err != nil {
@@ -32,7 +32,7 @@ func (r repository) Create(user *model.User) (*model.User, error) {
 	return user, err
 }
 
-func (r repository) Update(user *model.User) (*model.User, error) {
+func (r *repository) Update(user *model.User) (*model.User, error) {
 	log.Debug().Uint64("user_id", user.ID).Msg("Updating user")
 	err := r.db.Save(user).Error
 	if err != nil {
@@ -41,7 +41,7 @@ func (r repository) Update(user *model.User) (*model.User, error) {
 	return user, err
 }
 
-func (r repository) GetByID(id uint64) (*model.User, error) {
+func (r *repository) GetByID(id uint64) (*model.User, error) {
 	log.Debug().Uint64("user_id", id).Msg("Getting user")
 	user := model.User{}
 	err := r.db.First(&user, id).Error
@@ -51,7 +51,7 @@ func (r repository) GetByID(id uint64) (*model.User, error) {
 	return &user, err
 }
 
-func (r repository) GetAll() []model.User {
+func (r *repository) GetAll() []model.User {
 	log.Debug().Msg("Getting all users")
 	var users []model.User
 	r.db.Find(&users)
@@ -59,7 +59,7 @@ func (r repository) GetAll() []model.User {
 	return users
 }
 
-func (r repository) Delete(id uint64) error {
+func (r *repository) Delete(id uint64) error {
 	log.Debug().Uint64("user_id", id).Msg("Deleting user")
 	err := r.db.Delete(&model.User{}, id).Error
 	if err != nil {
