@@ -12,6 +12,7 @@ type Repository interface {
 	Update(user *model.User) (*model.User, error)
 	GetByID(id uint64) (*model.User, error)
 	GetAll() []model.User
+	IncreaseAllCharges(maxCharges uint) error
 	Delete(id uint64) error
 }
 
@@ -49,6 +50,15 @@ func (r *repository) GetByID(id uint64) (*model.User, error) {
 		log.Error().Err(err).Msg("Failed to get user")
 	}
 	return &user, err
+}
+
+func (r *repository) IncreaseAllCharges(maxCharges uint) error {
+	log.Debug().Msg("Increasing all paint charges")
+	err := r.db.Model(&model.User{}).Where("charges + 1 <= ?", maxCharges).Update("charges", gorm.Expr("charges + 1")).Error
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to increase all paint charges")
+	}
+	return err
 }
 
 func (r *repository) GetAll() []model.User {
