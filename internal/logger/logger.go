@@ -11,6 +11,7 @@ import (
 func SetupLogger() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+	zerolog.LevelColors[zerolog.DebugLevel] = 35
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Caller().Logger()
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 }
