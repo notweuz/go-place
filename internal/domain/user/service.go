@@ -14,26 +14,26 @@ type service struct {
 	repository Repository
 }
 
-func (s service) Create(user *model.User) (*model.User, error) {
+func (s *service) Create(user *model.User) (*model.User, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s service) GetByID(id uint64) (*model.User, error) {
+func (s *service) GetByID(id uint64) (*model.User, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s service) GetAll() []model.User {
+func (s *service) GetAll() []model.User {
 	panic("implement me")
 }
 
-func (s service) Update(user *model.User) (*model.User, error) {
+func (s *service) Update(user *model.User) (*model.User, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s service) Delete(id uint64) error {
+func (s *service) Delete(id uint64) error {
 	//TODO implement me
 	panic("implement me")
 }
