@@ -44,7 +44,7 @@ func (r repository) Update(user *model.User) (*model.User, error) {
 func (r repository) GetByID(id uint64) (*model.User, error) {
 	log.Debug().Uint64("user_id", id).Msg("Getting user")
 	user := model.User{}
-	err := r.db.Where("id = ?", id).First(&user).Error
+	err := r.db.First(&user, id).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get user")
 	}
