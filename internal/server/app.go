@@ -22,6 +22,11 @@ func NewApp(cfg *config.Config) *App {
 		log.Fatal().Err(err).Msg("Failed to start database!")
 	}
 
+	//userRepo := user.NewRepository(db)
+	//pixelRepo := pixel.NewRepository(db)
+
+	//pixelService := pixel.NewService(pixelRepo)
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
 	})
