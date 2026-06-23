@@ -46,7 +46,7 @@ func (r *repository) Update(pixel *model.Pixel) (*model.Pixel, error) {
 func (r *repository) GetByID(id uint64) (*model.Pixel, error) {
 	log.Debug().Uint64("id", id).Msg("getting pixel by id")
 	var entity model.Pixel
-	err := r.db.Where("id = ?", id).First(&entity).Error
+	err := r.db.First(&entity, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Warn().Uint64("pixel_id", id).Msg("pixel not found")
@@ -60,7 +60,7 @@ func (r *repository) GetByID(id uint64) (*model.Pixel, error) {
 func (r *repository) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
 	log.Debug().Uint64("x", x).Uint64("y", y).Msg("getting pixel by x,y")
 	var entity model.Pixel
-	err := r.db.Where("x = ? AND y = ?", x, y).First(&entity).Error
+	err := r.db.First(&entity, "x = ? AND y = ?", x, y).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Warn().Uint64("x", x).Uint64("y", y).Msg("pixel not found")
