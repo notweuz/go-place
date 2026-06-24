@@ -11,10 +11,10 @@ import (
 )
 
 type Service interface {
-	Create(pixel *model.Pixel) (*model.Pixel, error)
+	Create(pixel *model.Pixel) error
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
-	Update(pixel *model.Pixel) (*model.Pixel, error)
+	Update(pixel *model.Pixel) error
 	Delete(id uint64) error
 }
 
@@ -26,14 +26,14 @@ func NewService(repository Repository) Service {
 	return &service{repository: repository}
 }
 
-func (s *service) Create(pixel *model.Pixel) (*model.Pixel, error) {
+func (s *service) Create(pixel *model.Pixel) error {
 	log.Info().Uint64("pixel_id", pixel.ID).Uint64("x", pixel.X).Uint64("y", pixel.Y).Msg("Attempting to create pixel")
 	err := s.repository.Create(pixel)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create pixel")
-		return nil, errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't create pixel")
+		return errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't create pixel")
 	}
-	return pixel, nil
+	return nil
 }
 
 func (s *service) GetByID(id uint64) (*model.Pixel, error) {
@@ -62,17 +62,17 @@ func (s *service) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
 	return entity, nil
 }
 
-func (s *service) Update(pixel *model.Pixel) (*model.Pixel, error) {
+func (s *service) Update(pixel *model.Pixel) error {
 	log.Info().Uint64("pixel_id", pixel.ID).Msg("Attempting to update pixel")
 	err := s.repository.Update(pixel)
 	if err != nil {
 		log.Error().Err(err).Uint64("pixel_id", pixel.ID).Msg("Failed to update pixel")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.NewAppError(errs.ErrNotFoundInDB, fiber.StatusNotFound, "Pixel not found")
+			return errs.NewAppError(errs.ErrNotFoundInDB, fiber.StatusNotFound, "Pixel not found")
 		}
-		return nil, errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't get pixel")
+		return errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't get pixel")
 	}
-	return pixel, nil
+	return nil
 }
 
 func (s *service) Delete(id uint64) error {
