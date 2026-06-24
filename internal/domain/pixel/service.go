@@ -64,7 +64,7 @@ func (s *service) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
 
 func (s *service) Update(pixel *model.Pixel) (*model.Pixel, error) {
 	log.Info().Uint64("pixel_id", pixel.ID).Msg("Attempting to update pixel")
-	entity, err := s.repository.Update(pixel)
+	err := s.repository.Update(pixel)
 	if err != nil {
 		log.Error().Err(err).Uint64("pixel_id", pixel.ID).Msg("Failed to update pixel")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -72,7 +72,7 @@ func (s *service) Update(pixel *model.Pixel) (*model.Pixel, error) {
 		}
 		return nil, errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't get pixel")
 	}
-	return entity, nil
+	return pixel, nil
 }
 
 func (s *service) Delete(id uint64) error {

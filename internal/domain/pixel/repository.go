@@ -10,7 +10,7 @@ import (
 
 type Repository interface {
 	Create(pixel *model.Pixel) error
-	Update(pixel *model.Pixel) (*model.Pixel, error)
+	Update(pixel *model.Pixel) error
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
 	GetAll() []model.Pixel
@@ -34,13 +34,13 @@ func (r *repository) Create(pixel *model.Pixel) error {
 	return err
 }
 
-func (r *repository) Update(pixel *model.Pixel) (*model.Pixel, error) {
+func (r *repository) Update(pixel *model.Pixel) error {
 	log.Debug().Uint64("x", pixel.X).Uint64("y", pixel.Y).Msg("updating pixel")
 	err := r.db.Save(pixel).Error
 	if err != nil {
 		log.Error().Err(err).Msg("pixel creation failed")
 	}
-	return pixel, err
+	return err
 }
 
 func (r *repository) GetByID(id uint64) (*model.Pixel, error) {
