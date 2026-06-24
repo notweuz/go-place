@@ -22,6 +22,10 @@ type service struct {
 	repository Repository
 }
 
+func NewService(repository Repository) Service {
+	return &service{repository: repository}
+}
+
 func (s *service) Create(user *model.User) error {
 	log.Info().Uint64("id", user.ID).Str("username", user.Username).Msg("Creating user")
 	err := s.repository.Create(user)
