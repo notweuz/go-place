@@ -9,4 +9,5 @@ var (
 	ErrNoBCryptSaltFound   = errors.New("BCrypt salt is missing in .env")
 	ErrNotFoundInDB        = errors.New("not found")
 	ErrInternalServerError = errors.New("internal server error")
+	ErrDuplicatedKey       = errors.New("duplicated key")
 )
