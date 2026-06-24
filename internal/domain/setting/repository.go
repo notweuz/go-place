@@ -9,9 +9,9 @@ import (
 )
 
 type Repository interface {
-	Create(setting *model.Setting) (*model.Setting, error)
+	Create(setting *model.Setting) error
 	Get() (*model.Setting, error)
-	Update(*model.Setting) (*model.Setting, error)
+	Update(*model.Setting) error
 }
 
 type repository struct {
@@ -22,14 +22,14 @@ func NewRepository(db *gorm.DB) Repository {
 	return &repository{db: db}
 }
 
-func (r *repository) Create(setting *model.Setting) (*model.Setting, error) {
+func (r *repository) Create(setting *model.Setting) error {
 	log.Debug().Msgf("Creating setting")
 	err := r.db.Create(setting).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create setting")
-		return nil, err
+		return err
 	}
-	return setting, nil
+	return nil
 }
 
 func (r *repository) Get() (*model.Setting, error) {
@@ -39,24 +39,25 @@ func (r *repository) Get() (*model.Setting, error) {
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get settings")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			setting, err2 := r.Create(&model.Setting{})
+			setting := model.Setting{}
+			err2 := r.Create(&setting)
 			if err2 != nil {
 				log.Error().Err(err2).Msg("Failed to create setting")
 				return nil, err2
 			}
-			return setting, nil
+			return &setting, nil
 		}
 		return nil, err
 	}
 	return entity, nil
 }
 
-func (r *repository) Update(setting *model.Setting) (*model.Setting, error) {
+func (r *repository) Update(setting *model.Setting) error {
 	log.Debug().Msg("Updating setting")
 	err := r.db.Save(setting).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update setting")
-		return nil, err
+		return err
 	}
-	return setting, nil
+	return nil
 }
