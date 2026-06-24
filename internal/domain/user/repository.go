@@ -8,8 +8,8 @@ import (
 )
 
 type Repository interface {
-	Create(user *model.User) (*model.User, error)
-	Update(user *model.User) (*model.User, error)
+	Create(user *model.User) error
+	Update(user *model.User) error
 	GetByID(id uint64) (*model.User, error)
 	GetAll() []model.User
 	IncreaseAllCharges(maxCharges uint) error
@@ -24,22 +24,22 @@ func NewRepository(db *gorm.DB) Repository {
 	return &repository{db: db}
 }
 
-func (r *repository) Create(user *model.User) (*model.User, error) {
+func (r *repository) Create(user *model.User) error {
 	log.Debug().Uint64("user_id", user.ID).Str("username", user.Username).Msg("Creating user")
 	err := r.db.Create(user).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create user")
 	}
-	return user, err
+	return err
 }
 
-func (r *repository) Update(user *model.User) (*model.User, error) {
+func (r *repository) Update(user *model.User) error {
 	log.Debug().Uint64("user_id", user.ID).Msg("Updating user")
 	err := r.db.Save(user).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update user")
 	}
-	return user, err
+	return err
 }
 
 func (r *repository) GetByID(id uint64) (*model.User, error) {
