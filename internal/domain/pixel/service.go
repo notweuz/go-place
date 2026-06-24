@@ -28,12 +28,12 @@ func NewService(repository Repository) Service {
 
 func (s *service) Create(pixel *model.Pixel) (*model.Pixel, error) {
 	log.Info().Uint64("pixel_id", pixel.ID).Uint64("x", pixel.X).Uint64("y", pixel.Y).Msg("Attempting to create pixel")
-	entity, err := s.repository.Create(pixel)
+	err := s.repository.Create(pixel)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create pixel")
 		return nil, errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't create pixel")
 	}
-	return entity, nil
+	return pixel, nil
 }
 
 func (s *service) GetByID(id uint64) (*model.Pixel, error) {

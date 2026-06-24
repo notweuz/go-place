@@ -9,7 +9,7 @@ import (
 )
 
 type Repository interface {
-	Create(pixel *model.Pixel) (*model.Pixel, error)
+	Create(pixel *model.Pixel) error
 	Update(pixel *model.Pixel) (*model.Pixel, error)
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
@@ -25,13 +25,13 @@ func NewRepository(db *gorm.DB) Repository {
 	return &repository{db: db}
 }
 
-func (r *repository) Create(pixel *model.Pixel) (*model.Pixel, error) {
+func (r *repository) Create(pixel *model.Pixel) error {
 	log.Debug().Uint64("x", pixel.X).Uint64("y", pixel.Y).Msg("creating pixel")
 	err := r.db.Create(pixel).Error
 	if err != nil {
 		log.Error().Err(err).Msg("pixel creation failed")
 	}
-	return pixel, err
+	return err
 }
 
 func (r *repository) Update(pixel *model.Pixel) (*model.Pixel, error) {
