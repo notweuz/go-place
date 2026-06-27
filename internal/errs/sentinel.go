@@ -7,6 +7,7 @@ import (
 var (
 	ErrNoJWTSecretFound    = errors.New("JWT secret is missing in .env")
 	ErrNoBCryptSaltFound   = errors.New("BCrypt salt is missing in .env")
+	ErrNotAuthorized       = errors.New("not authorized")
 	ErrNotFoundInDB        = errors.New("not found")
 	ErrInternalServerError = errors.New("internal server error")
 	ErrDuplicatedKey       = errors.New("duplicated key")
