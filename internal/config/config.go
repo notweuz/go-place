@@ -13,7 +13,6 @@ type Config struct {
 	DatabaseDSN string
 	LogLevel    string
 	JwtSecret   string
-	BCryptSalt  string
 	AppPort     int
 }
 
@@ -42,11 +41,6 @@ func NewConfig() (*Config, error) {
 		return nil, errs.ErrNoJWTSecretFound
 	}
 
-	bcryptSalt := os.Getenv("BCRPYT_SALT")
-	if bcryptSalt == "" {
-		return nil, errs.ErrNoBCryptSaltFound
-	}
-
 	appPort, err := strconv.Atoi(os.Getenv("APP_PORT"))
 	if err != nil {
 		log.Warn().Msgf("Failed to parse APP_PORT")
@@ -55,7 +49,6 @@ func NewConfig() (*Config, error) {
 
 	cfg.DatabaseDSN = databaseDSN
 	cfg.LogLevel = logLevel
-	cfg.BCryptSalt = bcryptSalt
 	cfg.JwtSecret = jwtSecret
 	cfg.AppPort = appPort
 
