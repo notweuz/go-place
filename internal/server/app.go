@@ -31,6 +31,7 @@ func NewApp(cfg *config.Config) *App {
 		ErrorHandler: middleware.ErrorHandler,
 	})
 	app.Use(cors.New())
+	app.Use(middleware.Logger)
 
 	return &App{
 		DB:     db,
