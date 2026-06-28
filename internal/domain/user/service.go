@@ -12,6 +12,7 @@ import (
 type Service interface {
 	Create(user *model.User) error
 	GetByID(id uint64) (*model.User, error)
+	GetByUsername(username string) (*model.User, error)
 	GetAll() []model.User
 	Update(user *model.User) error
 	Delete(id uint64) error
@@ -43,6 +44,19 @@ func (s *service) GetByID(id uint64) (*model.User, error) {
 	user, err := s.repository.GetByID(id)
 	if err != nil {
 		log.Error().Err(err).Uint64("id", id).Msg("Failed to get user by id")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errs.ErrNotFound
+		}
+		return nil, errs.ErrInternalServerError
+	}
+	return user, nil
+}
+
+func (s *service) GetByUsername(username string) (*model.User, error) {
+	log.Info().Str("username", username).Msg("Getting user by username")
+	user, err := s.repository.GetByUsername(username)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get user by username")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errs.ErrNotFound
 		}

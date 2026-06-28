@@ -11,6 +11,7 @@ type Repository interface {
 	Create(user *model.User) error
 	Update(user *model.User) error
 	GetByID(id uint64) (*model.User, error)
+	GetByUsername(username string) (*model.User, error)
 	GetAll() []model.User
 	IncreaseAllCharges(maxCharges uint) error
 	Delete(id uint64) error
@@ -46,6 +47,16 @@ func (r *repository) GetByID(id uint64) (*model.User, error) {
 	log.Debug().Uint64("user_id", id).Msg("Getting user")
 	user := model.User{}
 	err := r.db.First(&user, id).Error
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get user")
+	}
+	return &user, err
+}
+
+func (r *repository) GetByUsername(username string) (*model.User, error) {
+	log.Debug().Str("username", username).Msg("Getting user")
+	user := model.User{}
+	err := r.db.First(&user, "username = ?", username).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get user")
 	}
