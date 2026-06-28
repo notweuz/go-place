@@ -1,9 +1,12 @@
 package setting
 
 import (
+	"errors"
+	"go-place/internal/errs"
 	"go-place/internal/model"
 
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
 type Service interface {
@@ -47,6 +50,10 @@ func (s *service) Update(setting *model.Setting) error {
 	err := s.repository.Update(setting)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update settings profile")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errs.ErrNotFound
+		}
+		return errs.ErrInternalServerError
 	}
 	return nil
 }

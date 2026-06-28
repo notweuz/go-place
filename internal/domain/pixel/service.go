@@ -5,7 +5,6 @@ import (
 	"go-place/internal/errs"
 	"go-place/internal/model"
 
-	"github.com/gofiber/fiber/v3"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
@@ -31,7 +30,7 @@ func (s *service) Create(pixel *model.Pixel) error {
 	err := s.repository.Create(pixel)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create pixel")
-		return errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't create pixel")
+		return errs.ErrInternalServerError
 	}
 	return nil
 }
@@ -42,9 +41,9 @@ func (s *service) GetByID(id uint64) (*model.Pixel, error) {
 	if err != nil {
 		log.Error().Err(err).Uint64("pixel_id", id).Msg("Failed to get pixel by id")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.NewAppError(errs.ErrNotFoundInDB, fiber.StatusNotFound, "Pixel not found")
+			return nil, errs.ErrNotFound
 		}
-		return nil, errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't get pixel")
+		return nil, errs.ErrInternalServerError
 	}
 	return entity, nil
 }
@@ -55,9 +54,9 @@ func (s *service) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
 	if err != nil {
 		log.Error().Err(err).Uint64("x", x).Uint64("y", y).Msg("Failed to get pixel by coordinates")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.NewAppError(errs.ErrNotFoundInDB, fiber.StatusNotFound, "Pixel not found")
+			return nil, errs.ErrNotFound
 		}
-		return nil, errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't get pixel")
+		return nil, errs.ErrInternalServerError
 	}
 	return entity, nil
 }
@@ -68,9 +67,9 @@ func (s *service) Update(pixel *model.Pixel) error {
 	if err != nil {
 		log.Error().Err(err).Uint64("pixel_id", pixel.ID).Msg("Failed to update pixel")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errs.NewAppError(errs.ErrNotFoundInDB, fiber.StatusNotFound, "Pixel not found")
+			return errs.ErrNotFound
 		}
-		return errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't get pixel")
+		return errs.ErrInternalServerError
 	}
 	return nil
 }
@@ -81,9 +80,9 @@ func (s *service) Delete(id uint64) error {
 	if err != nil {
 		log.Error().Err(err).Uint64("pixel_id", id).Msg("Failed to delete pixel by id")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errs.NewAppError(errs.ErrNotFoundInDB, fiber.StatusNotFound, "Pixel not found")
+			return errs.ErrNotFound
 		}
-		return errs.NewAppError(errs.ErrInternalServerError, fiber.StatusInternalServerError, "Couldn't delete pixel")
+		return errs.ErrInternalServerError
 	}
 	return nil
 }
