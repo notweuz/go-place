@@ -3,6 +3,7 @@ package auth
 import (
 	"time"
 
+	"github.com/gofiber/fiber/v3/log"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -11,11 +12,11 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func GenerateToken(userID uint64, secret string, ttl time.Duration) (string, error) {
+func GenerateToken(userID uint64, secret string) (string, error) {
 	claims := Claims{
 		UserID: userID,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(ttl).Unix(),
+			ExpiresAt: time.Now().Add(30 * 24 * time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 	}
@@ -27,6 +28,7 @@ func GenerateToken(userID uint64, secret string, ttl time.Duration) (string, err
 func ParseToken(tokenString string, secret string) (uint64, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			log.Errorf("Unexpected signing method: %v", token.Header["alg"])
 			return nil, jwt.ErrSignatureInvalid
 		}
 		return []byte(secret), nil

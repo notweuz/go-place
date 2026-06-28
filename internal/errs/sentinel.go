@@ -10,4 +10,7 @@ var (
 	ErrNotFound            = errors.New("not found")
 	ErrInternalServerError = errors.New("internal server error")
 	ErrConflict            = errors.New("duplicated key")
+	ErrFailedBCrypt        = errors.New("failed bcrypt hash")
+	ErrFailedJWT           = errors.New("jwt creation failed")
+	ErrInvalidCredentials  = errors.New("invalid credentials")
 )
