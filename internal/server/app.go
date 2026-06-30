@@ -2,7 +2,10 @@ package server
 
 import (
 	"go-place/internal/config"
+	"go-place/internal/domain/auth"
+	"go-place/internal/domain/user"
 	"go-place/internal/middleware"
+	"go-place/internal/router"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -22,16 +25,20 @@ func NewApp(cfg *config.Config) *App {
 		log.Fatal().Err(err).Msg("Failed to start database!")
 	}
 
-	//userRepo := user.NewRepository(db)
-	//pixelRepo := pixel.NewRepository(db)
+	userDB := user.NewRepository(db)
+	userSVC := user.NewService(userDB)
 
-	//pixelService := pixel.NewService(pixelRepo)
+	authSVC := auth.NewService(userSVC, cfg)
+	authHR := auth.NewHandler(authSVC)
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
 	})
 	app.Use(cors.New())
 	app.Use(middleware.Logger)
+
+	appRouter := router.NewRouter(app, authHR)
+	appRouter.Setup()
 
 	return &App{
 		DB:     db,
