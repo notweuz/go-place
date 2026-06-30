@@ -61,6 +61,8 @@ func (h *handler) Login(ctx fiber.Ctx) error {
 
 	if err != nil {
 		switch {
+		case errors.Is(err, errs.ErrInvalidCredentials):
+			return errs.InvalidCredentials(err)
 		case errors.Is(err, errs.ErrFailedJWT):
 			return errs.FailedJWT(err)
 		case errors.Is(err, errs.ErrFailedBCrypt):
