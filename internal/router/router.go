@@ -4,6 +4,7 @@ import (
 	"go-place/internal/domain/auth"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/rs/zerolog/log"
 )
 
 type Router interface {
@@ -26,11 +27,13 @@ func NewRouter(app *fiber.App, authHandler auth.Handler) Router {
 }
 
 func (r *router) Setup() {
+	log.Info().Msg("Setting up router")
 	api := r.app.Group("/api")
 	r.setupAuthRoutes(api)
 }
 
 func (r *router) setupAuthRoutes(api fiber.Router) {
+	log.Debug().Msg("Setting up auth routes")
 	authRoute := api.Group("/auth")
 	authRoute.Post("/register", r.authHandler.Register)
 	authRoute.Post("/login", r.authHandler.Login)
