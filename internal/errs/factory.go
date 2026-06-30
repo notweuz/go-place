@@ -10,6 +10,14 @@ func FailedJWT(err error) *AppError {
 	return NewAppError(err, fiber.StatusInternalServerError, "failed to generate token")
 }
 
+func InvalidCredentials(err error) *AppError {
+	return NewAppError(err, fiber.StatusUnauthorized, "invalid credentials")
+}
+
+func Unauthorized(err error) *AppError {
+	return NewAppError(err, fiber.StatusUnauthorized, "unauthorized")
+}
+
 func FailedBCrypt(err error) *AppError {
 	return NewAppError(err, fiber.StatusInternalServerError, "failed to hash password")
 }
