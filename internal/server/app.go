@@ -27,6 +27,7 @@ func NewApp(cfg *config.Config) *App {
 
 	userDB := user.NewRepository(db)
 	userSVC := user.NewService(userDB)
+	userHR := user.NewHandler(userSVC)
 
 	authSVC := auth.NewService(userSVC, cfg)
 	authHR := auth.NewHandler(authSVC)
@@ -37,7 +38,7 @@ func NewApp(cfg *config.Config) *App {
 	app.Use(cors.New())
 	app.Use(middleware.Logger)
 
-	appRouter := router.NewRouter(app, authHR)
+	appRouter := router.NewRouter(app, authHR, userHR)
 	appRouter.Setup()
 
 	return &App{

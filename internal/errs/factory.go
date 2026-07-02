@@ -14,6 +14,14 @@ func InvalidCredentials(err error) *AppError {
 	return NewAppError(err, fiber.StatusUnauthorized, "invalid credentials")
 }
 
+func NotFound(err error, message string) *AppError {
+	return NewAppError(err, fiber.StatusNotFound, message)
+}
+
+func UnauthorizedTokenError(err error, message string) *AppError {
+	return NewAppError(err, fiber.StatusUnauthorized, message)
+}
+
 func Unauthorized(err error) *AppError {
 	return NewAppError(err, fiber.StatusUnauthorized, "unauthorized")
 }
