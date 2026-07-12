@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"go-place/internal/database"
 	"go-place/internal/errs"
 	"go-place/internal/model"
 
@@ -11,9 +12,9 @@ import (
 
 type Service interface {
 	Create(user *model.User) error
-	GetByID(id uint64) (*model.User, error)
-	GetByUsername(username string) (*model.User, error)
-	GetAll() []model.User
+	GetByID(id uint64, opts ...database.Option) (*model.User, error)
+	GetByUsername(username string, opts ...database.Option) (*model.User, error)
+	GetAll(opts ...database.Option) []model.User
 	Update(user *model.User) error
 	Delete(id uint64) error
 }
@@ -39,9 +40,9 @@ func (s *service) Create(user *model.User) error {
 	return nil
 }
 
-func (s *service) GetByID(id uint64) (*model.User, error) {
+func (s *service) GetByID(id uint64, opts ...database.Option) (*model.User, error) {
 	log.Info().Uint64("id", id).Msg("Getting user by id")
-	user, err := s.repository.GetByID(id)
+	user, err := s.repository.GetByID(id, opts...)
 	if err != nil {
 		log.Error().Err(err).Uint64("id", id).Msg("Failed to get user by id")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -52,9 +53,9 @@ func (s *service) GetByID(id uint64) (*model.User, error) {
 	return user, nil
 }
 
-func (s *service) GetByUsername(username string) (*model.User, error) {
+func (s *service) GetByUsername(username string, opts ...database.Option) (*model.User, error) {
 	log.Info().Str("username", username).Msg("Getting user by username")
-	user, err := s.repository.GetByUsername(username)
+	user, err := s.repository.GetByUsername(username, opts...)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get user by username")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -65,9 +66,9 @@ func (s *service) GetByUsername(username string) (*model.User, error) {
 	return user, nil
 }
 
-func (s *service) GetAll() []model.User {
+func (s *service) GetAll(opts ...database.Option) []model.User {
 	log.Info().Msg("Getting all users")
-	return s.repository.GetAll()
+	return s.repository.GetAll(opts...)
 }
 
 func (s *service) Update(user *model.User) error {

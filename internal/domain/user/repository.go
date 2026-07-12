@@ -1,6 +1,7 @@
 package user
 
 import (
+	"go-place/internal/database"
 	"go-place/internal/model"
 
 	"github.com/rs/zerolog/log"
@@ -10,9 +11,9 @@ import (
 type Repository interface {
 	Create(user *model.User) error
 	Update(user *model.User) error
-	GetByID(id uint64) (*model.User, error)
-	GetByUsername(username string) (*model.User, error)
-	GetAll() []model.User
+	GetByID(id uint64, opts ...database.Option) (*model.User, error)
+	GetByUsername(username string, opts ...database.Option) (*model.User, error)
+	GetAll(opts ...database.Option) []model.User
 	IncreaseAllCharges(maxCharges uint) error
 	Delete(id uint64) error
 }
@@ -43,20 +44,28 @@ func (r *repository) Update(user *model.User) error {
 	return err
 }
 
-func (r *repository) GetByID(id uint64) (*model.User, error) {
+func (r *repository) GetByID(id uint64, opts ...database.Option) (*model.User, error) {
 	log.Debug().Uint64("user_id", id).Msg("Getting user")
 	user := model.User{}
-	err := r.db.First(&user, id).Error
+	db := r.db
+	for _, opt := range opts {
+		db = opt(db)
+	}
+	err := db.First(&user, id).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get user")
 	}
 	return &user, err
 }
 
-func (r *repository) GetByUsername(username string) (*model.User, error) {
+func (r *repository) GetByUsername(username string, opts ...database.Option) (*model.User, error) {
 	log.Debug().Str("username", username).Msg("Getting user")
 	user := model.User{}
-	err := r.db.First(&user, "username = ?", username).Error
+	db := r.db
+	for _, opt := range opts {
+		db = opt(db)
+	}
+	err := db.First(&user, "username = ?", username).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get user")
 	}
@@ -72,10 +81,14 @@ func (r *repository) IncreaseAllCharges(maxCharges uint) error {
 	return err
 }
 
-func (r *repository) GetAll() []model.User {
+func (r *repository) GetAll(opts ...database.Option) []model.User {
 	log.Debug().Msg("Getting all users")
 	var users []model.User
-	r.db.Find(&users)
+	db := r.db
+	for _, opt := range opts {
+		db = opt(db)
+	}
+	db.Find(&users)
 	log.Info().Int("amount", len(users)).Msg("Successfully fetched all users")
 	return users
 }
