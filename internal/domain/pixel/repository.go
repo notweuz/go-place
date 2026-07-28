@@ -14,7 +14,7 @@ type Repository interface {
 	Update(pixel *model.Pixel) error
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
-	GetAll(opts ...database.Option) []model.Pixel
+	GetAll(opts ...database.Option) ([]model.Pixel, error)
 	Delete(id uint64) error
 }
 
@@ -72,16 +72,19 @@ func (r *repository) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
 	return &entity, err
 }
 
-func (r *repository) GetAll(opts ...database.Option) []model.Pixel {
+func (r *repository) GetAll(opts ...database.Option) ([]model.Pixel, error) {
 	log.Debug().Msg("getting all pixels")
 	var pixels []model.Pixel
 	db := r.db
 	for _, opt := range opts {
 		db = opt(db)
 	}
-	db.Find(&pixels)
+	if err := db.Find(&pixels).Error; err != nil {
+		log.Error().Err(err).Msg("pixel fetch failed")
+		return nil, err
+	}
 	log.Info().Int("amount", len(pixels)).Msg("pixel fetch success")
-	return pixels
+	return pixels, nil
 }
 
 func (r *repository) Delete(id uint64) error {

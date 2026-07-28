@@ -56,7 +56,10 @@ func (h *handler) GetByCoordinates(ctx fiber.Ctx) error {
 }
 
 func (h *handler) GetAll(ctx fiber.Ctx) error {
-	pixels := h.service.GetAll()
+	pixels, err := h.service.GetAll()
+	if err != nil {
+		return errs.Internal(err)
+	}
 
 	pixelsFull := make([]response.PixelFull, len(pixels))
 	for i, pixel := range pixels {

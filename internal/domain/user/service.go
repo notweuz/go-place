@@ -14,7 +14,7 @@ type Service interface {
 	Create(user *model.User) error
 	GetByID(id uint64, opts ...database.Option) (*model.User, error)
 	GetByUsername(username string, opts ...database.Option) (*model.User, error)
-	GetAll(opts ...database.Option) []model.User
+	GetAll(opts ...database.Option) ([]model.User, error)
 	Update(user *model.User) error
 	Delete(id uint64) error
 }
@@ -66,9 +66,14 @@ func (s *service) GetByUsername(username string, opts ...database.Option) (*mode
 	return user, nil
 }
 
-func (s *service) GetAll(opts ...database.Option) []model.User {
+func (s *service) GetAll(opts ...database.Option) ([]model.User, error) {
 	log.Info().Msg("Getting all users")
-	return s.repository.GetAll(opts...)
+	users, err := s.repository.GetAll(opts...)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get all users")
+		return nil, errs.ErrInternalServerError
+	}
+	return users, nil
 }
 
 func (s *service) Update(user *model.User) error {

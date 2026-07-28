@@ -13,7 +13,7 @@ type Repository interface {
 	Update(user *model.User) error
 	GetByID(id uint64, opts ...database.Option) (*model.User, error)
 	GetByUsername(username string, opts ...database.Option) (*model.User, error)
-	GetAll(opts ...database.Option) []model.User
+	GetAll(opts ...database.Option) ([]model.User, error)
 	IncreaseAllCharges(maxCharges uint) error
 	Delete(id uint64) error
 }
@@ -81,16 +81,19 @@ func (r *repository) IncreaseAllCharges(maxCharges uint) error {
 	return err
 }
 
-func (r *repository) GetAll(opts ...database.Option) []model.User {
+func (r *repository) GetAll(opts ...database.Option) ([]model.User, error) {
 	log.Debug().Msg("Getting all users")
 	var users []model.User
 	db := r.db
 	for _, opt := range opts {
 		db = opt(db)
 	}
-	db.Find(&users)
+	if err := db.Find(&users).Error; err != nil {
+		log.Error().Err(err).Msg("Failed to fetch all users")
+		return nil, err
+	}
 	log.Info().Int("amount", len(users)).Msg("Successfully fetched all users")
-	return users
+	return users, nil
 }
 
 func (r *repository) Delete(id uint64) error {

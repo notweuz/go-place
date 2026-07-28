@@ -14,7 +14,7 @@ type Service interface {
 	Create(pixel *model.Pixel) error
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
-	GetAll(opts ...database.Option) []model.Pixel
+	GetAll(opts ...database.Option) ([]model.Pixel, error)
 	Update(pixel *model.Pixel) error
 	Delete(id uint64) error
 }
@@ -63,9 +63,14 @@ func (s *service) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
 	return entity, nil
 }
 
-func (s *service) GetAll(opts ...database.Option) []model.Pixel {
+func (s *service) GetAll(opts ...database.Option) ([]model.Pixel, error) {
 	log.Info().Msg("Attempting to get all pixels")
-	return s.repository.GetAll(opts...)
+	pixels, err := s.repository.GetAll(opts...)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get all pixels")
+		return nil, errs.ErrInternalServerError
+	}
+	return pixels, nil
 }
 
 func (s *service) Update(pixel *model.Pixel) error {
