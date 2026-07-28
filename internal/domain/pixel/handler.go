@@ -11,6 +11,7 @@ import (
 type Handler interface {
 	GetByID(ctx fiber.Ctx) error
 	GetByCoordinates(ctx fiber.Ctx) error
+	GetAll(ctx fiber.Ctx) error
 }
 
 type handler struct {
@@ -52,4 +53,15 @@ func (h *handler) GetByCoordinates(ctx fiber.Ctx) error {
 	pixelFull := response.NewPixelFull(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color, pixel.CreatedAt, pixel.UpdatedAt)
 
 	return ctx.Status(fiber.StatusOK).JSON(pixelFull)
+}
+
+func (h *handler) GetAll(ctx fiber.Ctx) error {
+	pixels := h.service.GetAll()
+
+	pixelsFull := make([]response.PixelFull, len(pixels))
+	for i, pixel := range pixels {
+		pixelsFull[i] = *response.NewPixelFull(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color, pixel.CreatedAt, pixel.UpdatedAt)
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(pixelsFull)
 }

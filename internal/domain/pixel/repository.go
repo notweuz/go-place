@@ -2,6 +2,7 @@ package pixel
 
 import (
 	"errors"
+	"go-place/internal/database"
 	"go-place/internal/model"
 
 	"github.com/rs/zerolog/log"
@@ -13,7 +14,7 @@ type Repository interface {
 	Update(pixel *model.Pixel) error
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
-	GetAll() []model.Pixel
+	GetAll(opts ...database.Option) []model.Pixel
 	Delete(id uint64) error
 }
 
@@ -71,12 +72,16 @@ func (r *repository) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
 	return &entity, err
 }
 
-func (r *repository) GetAll() []model.Pixel {
+func (r *repository) GetAll(opts ...database.Option) []model.Pixel {
 	log.Debug().Msg("getting all pixels")
-	var entities []model.Pixel
-	r.db.Find(&entities)
-	log.Info().Int("amount", len(entities)).Msg("pixel fetch success")
-	return entities
+	var pixels []model.Pixel
+	db := r.db
+	for _, opt := range opts {
+		db = opt(db)
+	}
+	db.Find(&pixels)
+	log.Info().Int("amount", len(pixels)).Msg("pixel fetch success")
+	return pixels
 }
 
 func (r *repository) Delete(id uint64) error {

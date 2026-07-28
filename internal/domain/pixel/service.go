@@ -2,6 +2,7 @@ package pixel
 
 import (
 	"errors"
+	"go-place/internal/database"
 	"go-place/internal/errs"
 	"go-place/internal/model"
 
@@ -13,6 +14,7 @@ type Service interface {
 	Create(pixel *model.Pixel) error
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
+	GetAll(opts ...database.Option) []model.Pixel
 	Update(pixel *model.Pixel) error
 	Delete(id uint64) error
 }
@@ -59,6 +61,11 @@ func (s *service) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
 		return nil, errs.ErrInternalServerError
 	}
 	return entity, nil
+}
+
+func (s *service) GetAll(opts ...database.Option) []model.Pixel {
+	log.Info().Msg("Attempting to get all pixels")
+	return s.repository.GetAll(opts...)
 }
 
 func (s *service) Update(pixel *model.Pixel) error {
