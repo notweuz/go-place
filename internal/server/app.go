@@ -7,6 +7,7 @@ import (
 	"go-place/internal/domain/user"
 	"go-place/internal/middleware"
 	"go-place/internal/transport/http"
+	"go-place/internal/transport/websocket"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -37,13 +38,18 @@ func NewApp(cfg *config.Config) *App {
 	pixelSVC := pixel.NewService(pixelDB)
 	pixelHR := pixel.NewHandler(pixelSVC)
 
+	wsHub := websocket.NewHub()
+	go wsHub.Run()
+
+	wsHR := websocket.NewHandler(wsHub)
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
 	})
 	app.Use(cors.New())
 	app.Use(middleware.Logger)
 
-	appRouter := http.NewRouter(app, authHR, userHR, pixelHR)
+	appRouter := http.NewRouter(app, authHR, userHR, pixelHR, wsHR)
 	appRouter.Setup()
 
 	return &App{

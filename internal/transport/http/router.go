@@ -4,6 +4,8 @@ import (
 	"go-place/internal/domain/auth"
 	"go-place/internal/domain/pixel"
 	"go-place/internal/domain/user"
+	"go-place/internal/middleware"
+	"go-place/internal/transport/websocket"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/rs/zerolog/log"
@@ -14,24 +16,25 @@ type Router interface {
 	setupAuthRoutes(api fiber.Router)
 	setupUserRoutes(api fiber.Router)
 	setupPixelRoutes(api fiber.Router)
+	setupWebsocketRoutes(api fiber.Router)
 }
 
 type router struct {
-	app          *fiber.App
-	authHandler  auth.Handler
-	userHandler  user.Handler
-	pixelHandler pixel.Handler
+	app              *fiber.App
+	authHandler      auth.Handler
+	userHandler      user.Handler
+	pixelHandler     pixel.Handler
+	websocketHandler websocket.Handler
 }
 
-func NewRouter(app *fiber.App, authHandler auth.Handler, userHandler user.Handler, pixelHandler pixel.Handler) Router {
-	r := &router{
-		app:          app,
-		authHandler:  authHandler,
-		userHandler:  userHandler,
-		pixelHandler: pixelHandler,
+func NewRouter(app *fiber.App, authHandler auth.Handler, userHandler user.Handler, pixelHandler pixel.Handler, websocketHandler websocket.Handler) Router {
+	return &router{
+		app:              app,
+		authHandler:      authHandler,
+		userHandler:      userHandler,
+		pixelHandler:     pixelHandler,
+		websocketHandler: websocketHandler,
 	}
-
-	return r
 }
 
 func (r *router) Setup() {
@@ -40,6 +43,7 @@ func (r *router) Setup() {
 	r.setupAuthRoutes(api)
 	r.setupUserRoutes(api)
 	r.setupPixelRoutes(api)
+	r.setupWebsocketRoutes(api)
 }
 
 func (r *router) setupAuthRoutes(api fiber.Router) {
@@ -62,4 +66,9 @@ func (r *router) setupPixelRoutes(api fiber.Router) {
 	pixelRoute.Get("/:id", r.pixelHandler.GetByID)
 	pixelRoute.Get("/coords", r.pixelHandler.GetByCoordinates)
 	pixelRoute.Get("/", r.pixelHandler.GetAll)
+}
+
+func (r *router) setupWebsocketRoutes(api fiber.Router) {
+	log.Debug().Msg("Setting up websocket routes")
+	api.Get("/ws", middleware.WebsocketUpgrade, r.websocketHandler.Upgrade())
 }
