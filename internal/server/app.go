@@ -3,6 +3,7 @@ package server
 import (
 	"go-place/internal/config"
 	"go-place/internal/domain/auth"
+	"go-place/internal/domain/pixel"
 	"go-place/internal/domain/user"
 	"go-place/internal/middleware"
 	"go-place/internal/router"
@@ -32,13 +33,17 @@ func NewApp(cfg *config.Config) *App {
 	authSVC := auth.NewService(userSVC, cfg)
 	authHR := auth.NewHandler(authSVC)
 
+	pixelDB := pixel.NewRepository(db)
+	pixelSVC := pixel.NewService(pixelDB)
+	pixelHR := pixel.NewHandler(pixelSVC)
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
 	})
 	app.Use(cors.New())
 	app.Use(middleware.Logger)
 
-	appRouter := router.NewRouter(app, authHR, userHR)
+	appRouter := router.NewRouter(app, authHR, userHR, pixelHR)
 	appRouter.Setup()
 
 	return &App{
