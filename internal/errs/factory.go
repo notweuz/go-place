@@ -14,25 +14,25 @@ func newBaseError(err error, statusCode int, baseMessage string, message ...stri
 }
 
 func Conflict(err error, message ...string) *AppError {
-	return newBaseError(err, fiber.StatusConflict, "same data already exists", message...)
+	return newBaseError(err, fiber.StatusConflict, MsgConflict, message...)
 }
 
 func NotFound(err error, message ...string) *AppError {
-	return newBaseError(err, fiber.StatusNotFound, "the requested data was not found", message...)
+	return newBaseError(err, fiber.StatusNotFound, MsgNotFound, message...)
 }
 
 func UpdateRequired(err error, message ...string) *AppError {
-	return newBaseError(err, fiber.StatusUpgradeRequired, "update required", message...)
+	return newBaseError(err, fiber.StatusUpgradeRequired, MsgUpdateRequired, message...)
 }
 
 func Unauthorized(err error, message ...string) *AppError {
-	return newBaseError(err, fiber.StatusUnauthorized, "unauthorized", message...)
+	return newBaseError(err, fiber.StatusUnauthorized, MsgUnauthorized, message...)
 }
 
 func Internal(err error, message ...string) *AppError {
-	return newBaseError(err, fiber.StatusInternalServerError, "internal server error", message...)
+	return newBaseError(err, fiber.StatusInternalServerError, MsgInternal, message...)
 }
 
 func BadRequest(err error, message ...string) *AppError {
-	return newBaseError(err, fiber.StatusBadRequest, "invalid request data", message...)
+	return newBaseError(err, fiber.StatusBadRequest, MsgBadRequest, message...)
 }
