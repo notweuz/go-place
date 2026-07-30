@@ -1,43 +1,38 @@
 package errs
 
-import "github.com/gofiber/fiber/v3"
+import (
+	"strings"
 
-func Conflict(err error, message string) *AppError {
-	return NewAppError(err, fiber.StatusConflict, message)
+	"github.com/gofiber/fiber/v3"
+)
+
+func newBaseError(err error, statusCode int, baseMessage string, message ...string) *AppError {
+	if len(message) > 0 {
+		return NewAppError(err, statusCode, strings.Join(message, " ")) // message is supposed to be only one string, but just in case...
+	}
+	return NewAppError(err, statusCode, baseMessage)
 }
 
-func FailedJWT(err error) *AppError {
-	return NewAppError(err, fiber.StatusInternalServerError, "failed to generate token")
+func Conflict(err error, message ...string) *AppError {
+	return newBaseError(err, fiber.StatusConflict, "same data already exists", message...)
 }
 
-func InvalidCredentials(err error) *AppError {
-	return NewAppError(err, fiber.StatusUnauthorized, "invalid credentials")
+func NotFound(err error, message ...string) *AppError {
+	return newBaseError(err, fiber.StatusNotFound, "the requested data was not found", message...)
 }
 
-func NotFound(err error, message string) *AppError {
-	return NewAppError(err, fiber.StatusNotFound, message)
+func UpdateRequired(err error, message ...string) *AppError {
+	return newBaseError(err, fiber.StatusUpgradeRequired, "update required", message...)
 }
 
-func UnauthorizedTokenError(err error, message string) *AppError {
-	return NewAppError(err, fiber.StatusUnauthorized, message)
+func Unauthorized(err error, message ...string) *AppError {
+	return newBaseError(err, fiber.StatusUnauthorized, "unauthorized", message...)
 }
 
-func UpdateRequired(err error) *AppError {
-	return NewAppError(err, fiber.StatusUpgradeRequired, "update required")
+func Internal(err error, message ...string) *AppError {
+	return newBaseError(err, fiber.StatusInternalServerError, "internal server error", message...)
 }
 
-func Unauthorized(err error) *AppError {
-	return NewAppError(err, fiber.StatusUnauthorized, "unauthorized")
-}
-
-func FailedBCrypt(err error) *AppError {
-	return NewAppError(err, fiber.StatusInternalServerError, "failed to hash password")
-}
-
-func Internal(err error) *AppError {
-	return NewAppError(err, fiber.StatusInternalServerError, "internal server error")
-}
-
-func BadRequest(err error, message string) *AppError {
-	return NewAppError(err, fiber.StatusBadRequest, message)
+func BadRequest(err error, message ...string) *AppError {
+	return newBaseError(err, fiber.StatusBadRequest, "invalid request data", message...)
 }

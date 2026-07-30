@@ -38,9 +38,9 @@ func (h *handler) Register(ctx fiber.Ctx) error {
 		case errors.Is(err, errs.ErrConflict):
 			return errs.Conflict(err, "user with same username already exist")
 		case errors.Is(err, errs.ErrFailedJWT):
-			return errs.FailedJWT(err)
+			return errs.Internal(err, "failed to generate token")
 		case errors.Is(err, errs.ErrFailedBCrypt):
-			return errs.FailedBCrypt(err)
+			return errs.Internal(err, "failed to hash password")
 		}
 		return errs.Internal(err)
 	}
@@ -62,11 +62,11 @@ func (h *handler) Login(ctx fiber.Ctx) error {
 	if err != nil {
 		switch {
 		case errors.Is(err, errs.ErrInvalidCredentials):
-			return errs.InvalidCredentials(err)
+			return errs.Unauthorized(err, "invalid credentials")
 		case errors.Is(err, errs.ErrFailedJWT):
-			return errs.FailedJWT(err)
+			return errs.Internal(err, "failed to generate token")
 		case errors.Is(err, errs.ErrFailedBCrypt):
-			return errs.FailedBCrypt(err)
+			return errs.Internal(err, "failed to hash password")
 		}
 		return errs.Internal(err)
 	}
