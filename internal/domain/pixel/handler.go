@@ -3,7 +3,10 @@ package pixel
 import (
 	"errors"
 	"go-place/internal/errs"
+	"go-place/internal/middleware"
+	"go-place/internal/model/request"
 	"go-place/internal/model/response"
+	"go-place/internal/validation"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -12,6 +15,7 @@ type Handler interface {
 	GetByID(ctx fiber.Ctx) error
 	GetByCoordinates(ctx fiber.Ctx) error
 	GetAll(ctx fiber.Ctx) error
+	Change(ctx fiber.Ctx) error
 }
 
 type handler struct {
@@ -67,4 +71,26 @@ func (h *handler) GetAll(ctx fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(pixelsFull)
+}
+
+func (h *handler) Change(ctx fiber.Ctx) error {
+	var changePixel request.ChangePixel
+	if err := ctx.Bind().Body(&changePixel); err != nil {
+		return errs.BadRequest(err, "invalid request body")
+	}
+	if err := validation.Validate(&changePixel); err != nil {
+		return err
+	}
+	userID, err := middleware.GetCurrentUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	pixel, err := h.service.Change(changePixel.X, changePixel.Y, changePixel.Color, userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errs.ErrNotFound):
+
+		}
+	}
 }
