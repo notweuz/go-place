@@ -7,7 +7,7 @@ type Setting struct {
 	CanvasWidth      uint64 `gorm:"not null;default:1000"`
 	CanvasHeight     uint64 `gorm:"not null;default:1000"`
 	CooldownSeconds  uint64 `gorm:"not null;default:30"`
-	MaxCharges       uint   `gorm:"not null;default:0"`
+	MaxCharges       uint   `gorm:"not null;default:5"`
 	RegistrationOpen bool   `gorm:"not null;default:true"`
 
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
