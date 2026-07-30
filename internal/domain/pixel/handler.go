@@ -39,8 +39,8 @@ func (h *handler) GetByID(ctx fiber.Ctx) error {
 }
 
 func (h *handler) GetByCoordinates(ctx fiber.Ctx) error {
-	x := fiber.Params[uint64](ctx, "x")
-	y := fiber.Params[uint64](ctx, "y")
+	x := fiber.Query[uint64](ctx, "x")
+	y := fiber.Query[uint64](ctx, "y")
 	pixel, err := h.service.GetByCoordinates(x, y)
 	if err != nil {
 		switch {
