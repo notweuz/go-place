@@ -14,7 +14,6 @@ type Repository interface {
 	GetByID(id uint64, opts ...database.Option) (*model.User, error)
 	GetByUsername(username string, opts ...database.Option) (*model.User, error)
 	GetAll(opts ...database.Option) ([]model.User, error)
-	IncreaseAllCharges(maxCharges uint) error
 	Delete(id uint64) error
 }
 
@@ -70,15 +69,6 @@ func (r *repository) GetByUsername(username string, opts ...database.Option) (*m
 		log.Error().Err(err).Msg("Failed to get user")
 	}
 	return &user, err
-}
-
-func (r *repository) IncreaseAllCharges(maxCharges uint) error {
-	log.Debug().Msg("Increasing all paint charges")
-	err := r.db.Model(&model.User{}).Where("charges + 1 <= ?", maxCharges).Update("charges", gorm.Expr("charges + 1")).Error
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to increase all paint charges")
-	}
-	return err
 }
 
 func (r *repository) GetAll(opts ...database.Option) ([]model.User, error) {
