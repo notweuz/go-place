@@ -14,4 +14,5 @@ var (
 	ErrFailedJWT           = errors.New("jwt creation failed")
 	ErrInvalidCredentials  = errors.New("invalid credentials")
 	ErrUpgradeRequired     = errors.New("upgrade required")
+	ErrNotEnoughCharges    = errors.New("not enough charges")
 )

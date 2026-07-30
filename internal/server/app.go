@@ -4,6 +4,7 @@ import (
 	"go-place/internal/config"
 	"go-place/internal/domain/auth"
 	"go-place/internal/domain/pixel"
+	"go-place/internal/domain/setting"
 	"go-place/internal/domain/user"
 	"go-place/internal/middleware"
 	"go-place/internal/transport/http"
@@ -27,6 +28,9 @@ func NewApp(cfg *config.Config) *App {
 		log.Fatal().Err(err).Msg("Failed to start database!")
 	}
 
+	settingDB := setting.NewRepository(db)
+	settingSVC := setting.NewService(settingDB)
+
 	userDB := user.NewRepository(db)
 	userSVC := user.NewService(userDB)
 	userHR := user.NewHandler(userSVC)
@@ -35,7 +39,7 @@ func NewApp(cfg *config.Config) *App {
 	authHR := auth.NewHandler(authSVC)
 
 	pixelDB := pixel.NewRepository(db)
-	pixelSVC := pixel.NewService(pixelDB)
+	pixelSVC := pixel.NewService(pixelDB, userSVC, settingSVC)
 	pixelHR := pixel.NewHandler(pixelSVC)
 
 	wsHub := websocket.NewHub()

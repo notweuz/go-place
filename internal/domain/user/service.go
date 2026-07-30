@@ -5,6 +5,7 @@ import (
 	"go-place/internal/database"
 	"go-place/internal/errs"
 	"go-place/internal/model"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
@@ -17,6 +18,8 @@ type Service interface {
 	GetAll(opts ...database.Option) ([]model.User, error)
 	Update(user *model.User) error
 	Delete(id uint64) error
+	SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration) (*model.User, error)
+	SpendCharge(id uint64, maxCharges uint, regenRate time.Duration) error
 }
 
 type service struct {
@@ -102,4 +105,37 @@ func (s *service) Delete(id uint64) error {
 		return errs.ErrInternalServerError
 	}
 	return nil
+}
+
+func (s *service) SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration) (*model.User, error) {
+	user, err := s.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	user.SyncCharges(maxCharges, regenRate)
+
+	err = s.Update(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s *service) SpendCharge(id uint64, maxCharges uint, regenRate time.Duration) error {
+	user, err := s.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	user.SyncCharges(maxCharges, regenRate)
+
+	if user.Charges < 1 {
+		return errs.ErrNotEnoughCharges
+	}
+
+	user.Charges--
+
+	return s.Update(user)
 }

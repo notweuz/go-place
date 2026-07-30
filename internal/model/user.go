@@ -21,17 +21,23 @@ func NewUser(username, password string) *User {
 	}
 }
 
-func (u *User) CurrentCharges(maxCharges uint, regenRate time.Duration) uint {
+func (u *User) SyncCharges(maxCharges uint, regenRate time.Duration) {
 	if u.Charges >= maxCharges {
-		return maxCharges
+		u.LastChargeAt = time.Now()
+		return
 	}
+
 	timePassed := time.Since(u.LastChargeAt)
-
 	gainedCharges := uint(timePassed / regenRate)
-	totalCharges := u.Charges + gainedCharges
-	if totalCharges > maxCharges {
-		return maxCharges
-	}
 
-	return totalCharges
+	if gainedCharges > 0 {
+		u.Charges += gainedCharges
+
+		if u.Charges >= maxCharges {
+			u.Charges = maxCharges
+			u.LastChargeAt = time.Now()
+		} else {
+			u.LastChargeAt = u.LastChargeAt.Add(time.Duration(gainedCharges) * regenRate)
+		}
+	}
 }
