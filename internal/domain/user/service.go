@@ -49,7 +49,7 @@ func (s *service) GetByID(id uint64, opts ...database.Option) (*model.User, erro
 	if err != nil {
 		log.Error().Err(err).Uint64("id", id).Msg("Failed to get user by id")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.ErrNotFound
+			return nil, errs.ErrUserNotFound
 		}
 		return nil, errs.ErrInternalServerError
 	}
@@ -62,7 +62,7 @@ func (s *service) GetByUsername(username string, opts ...database.Option) (*mode
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get user by username")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.ErrNotFound
+			return nil, errs.ErrUserNotFound
 		}
 		return nil, errs.ErrInternalServerError
 	}
@@ -86,7 +86,7 @@ func (s *service) Update(user *model.User) error {
 		log.Error().Err(err).Uint64("id", user.ID).Msg("Failed to update user")
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			return errs.ErrNotFound
+			return errs.ErrUserNotFound
 		default:
 			return errs.ErrInternalServerError
 		}
@@ -100,7 +100,7 @@ func (s *service) Delete(id uint64) error {
 	if err != nil {
 		log.Error().Err(err).Uint64("id", id).Msg("Failed to delete user by id")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errs.ErrNotFound
+			return errs.ErrUserNotFound
 		}
 		return errs.ErrInternalServerError
 	}

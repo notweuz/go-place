@@ -51,7 +51,7 @@ func (s *service) Update(setting *model.Setting) error {
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update settings profile")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errs.ErrNotFound
+			return errs.ErrSettingNotFound
 		}
 		return errs.ErrInternalServerError
 	}

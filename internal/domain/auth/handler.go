@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"go-place/internal/errs"
 	"go-place/internal/model/request"
 	"go-place/internal/model/response"
@@ -34,15 +33,7 @@ func (h *handler) Register(ctx fiber.Ctx) error {
 	token, err := h.service.Register(&req)
 
 	if err != nil {
-		switch {
-		case errors.Is(err, errs.ErrConflict):
-			return errs.Conflict(err, "user with same username already exist")
-		case errors.Is(err, errs.ErrFailedJWT):
-			return errs.Internal(err, "failed to generate token")
-		case errors.Is(err, errs.ErrFailedBCrypt):
-			return errs.Internal(err, "failed to hash password")
-		}
-		return errs.Internal(err)
+		return err
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(response.AuthToken{Token: *token})
@@ -60,15 +51,7 @@ func (h *handler) Login(ctx fiber.Ctx) error {
 	token, err := h.service.Login(&req)
 
 	if err != nil {
-		switch {
-		case errors.Is(err, errs.ErrInvalidCredentials):
-			return errs.Unauthorized(err, "invalid credentials")
-		case errors.Is(err, errs.ErrFailedJWT):
-			return errs.Internal(err, "failed to generate token")
-		case errors.Is(err, errs.ErrFailedBCrypt):
-			return errs.Internal(err, "failed to hash password")
-		}
-		return errs.Internal(err)
+		return err
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(response.AuthToken{Token: *token})

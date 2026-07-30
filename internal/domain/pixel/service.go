@@ -49,7 +49,7 @@ func (s *service) GetByID(id uint64) (*model.Pixel, error) {
 	if err != nil {
 		log.Error().Err(err).Uint64("pixel_id", id).Msg("Failed to get pixel by id")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.ErrNotFound
+			return nil, errs.ErrPixelNotFound
 		}
 		return nil, errs.ErrInternalServerError
 	}
@@ -62,7 +62,7 @@ func (s *service) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
 	if err != nil {
 		log.Error().Err(err).Uint64("x", x).Uint64("y", y).Msg("Failed to get pixel by coordinates")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.ErrNotFound
+			return nil, errs.ErrPixelNotFound
 		}
 		return nil, errs.ErrInternalServerError
 	}
@@ -128,7 +128,7 @@ func (s *service) Update(pixel *model.Pixel) error {
 	if err != nil {
 		log.Error().Err(err).Uint64("pixel_id", pixel.ID).Msg("Failed to update pixel")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errs.ErrNotFound
+			return errs.ErrPixelNotFound
 		}
 		return errs.ErrInternalServerError
 	}
@@ -141,7 +141,7 @@ func (s *service) Delete(id uint64) error {
 	if err != nil {
 		log.Error().Err(err).Uint64("pixel_id", id).Msg("Failed to delete pixel by id")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errs.ErrNotFound
+			return errs.ErrPixelNotFound
 		}
 		return errs.ErrInternalServerError
 	}

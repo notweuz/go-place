@@ -1,7 +1,6 @@
 package pixel
 
 import (
-	"errors"
 	"go-place/internal/errs"
 	"go-place/internal/middleware"
 	"go-place/internal/model/request"
@@ -30,11 +29,7 @@ func (h *handler) GetByID(ctx fiber.Ctx) error {
 	id := fiber.Params[uint64](ctx, "id")
 	pixel, err := h.service.GetByID(id)
 	if err != nil {
-		switch {
-		case errors.Is(err, errs.ErrNotFound):
-			return errs.NotFound(err, "pixel with the given ID doesnt exist")
-		}
-		return errs.Internal(err)
+		return err
 	}
 
 	pixelFull := response.NewPixelFull(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color, pixel.CreatedAt, pixel.UpdatedAt)
@@ -47,11 +42,7 @@ func (h *handler) GetByCoordinates(ctx fiber.Ctx) error {
 	y := fiber.Query[uint64](ctx, "y")
 	pixel, err := h.service.GetByCoordinates(x, y)
 	if err != nil {
-		switch {
-		case errors.Is(err, errs.ErrNotFound):
-			return errs.NotFound(err, "pixel with the given coordinates doesnt exist")
-		}
-		return errs.Internal(err)
+		return err
 	}
 
 	pixelFull := response.NewPixelFull(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color, pixel.CreatedAt, pixel.UpdatedAt)
@@ -62,7 +53,7 @@ func (h *handler) GetByCoordinates(ctx fiber.Ctx) error {
 func (h *handler) GetAll(ctx fiber.Ctx) error {
 	pixels, err := h.service.GetAll()
 	if err != nil {
-		return errs.Internal(err)
+		return err
 	}
 
 	pixelsFull := make([]response.PixelFull, len(pixels))
@@ -88,9 +79,10 @@ func (h *handler) Change(ctx fiber.Ctx) error {
 
 	pixel, err := h.service.Change(changePixel.X, changePixel.Y, changePixel.Color, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, errs.ErrNotFound):
-
-		}
+		return err
 	}
+
+	pixelFull := response.NewPixelFull(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color, pixel.CreatedAt, pixel.UpdatedAt)
+
+	return ctx.Status(fiber.StatusOK).JSON(pixelFull)
 }
