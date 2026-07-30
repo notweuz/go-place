@@ -22,6 +22,10 @@ func UnauthorizedTokenError(err error, message string) *AppError {
 	return NewAppError(err, fiber.StatusUnauthorized, message)
 }
 
+func UpdateRequired(err error) *AppError {
+	return NewAppError(err, fiber.StatusUpgradeRequired, "update required")
+}
+
 func Unauthorized(err error) *AppError {
 	return NewAppError(err, fiber.StatusUnauthorized, "unauthorized")
 }

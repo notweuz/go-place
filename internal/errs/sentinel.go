@@ -13,4 +13,5 @@ var (
 	ErrFailedBCrypt        = errors.New("failed bcrypt hash")
 	ErrFailedJWT           = errors.New("jwt creation failed")
 	ErrInvalidCredentials  = errors.New("invalid credentials")
+	ErrUpgradeRequired     = errors.New("upgrade required")
 )
