@@ -66,6 +66,7 @@ func (r *router) setupPixelRoutes(api fiber.Router) {
 	pixelRoute.Get("/:id", r.pixelHandler.GetByID)
 	pixelRoute.Get("/coords", r.pixelHandler.GetByCoordinates)
 	pixelRoute.Get("/", r.pixelHandler.GetAll)
+	pixelRoute.Post("/", middleware.AuthProtected, r.pixelHandler.Change)
 }
 
 func (r *router) setupWebsocketRoutes(api fiber.Router) {
