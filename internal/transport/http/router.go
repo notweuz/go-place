@@ -1,6 +1,7 @@
 package http
 
 import (
+	"go-place/internal/config"
 	"go-place/internal/domain/auth"
 	"go-place/internal/domain/pixel"
 	"go-place/internal/domain/user"
@@ -25,15 +26,17 @@ type router struct {
 	userHandler      user.Handler
 	pixelHandler     pixel.Handler
 	websocketHandler websocket.Handler
+	cfg              *config.Config
 }
 
-func NewRouter(app *fiber.App, authHandler auth.Handler, userHandler user.Handler, pixelHandler pixel.Handler, websocketHandler websocket.Handler) Router {
+func NewRouter(app *fiber.App, authHandler auth.Handler, userHandler user.Handler, pixelHandler pixel.Handler, websocketHandler websocket.Handler, cfg *config.Config) Router {
 	return &router{
 		app:              app,
 		authHandler:      authHandler,
 		userHandler:      userHandler,
 		pixelHandler:     pixelHandler,
 		websocketHandler: websocketHandler,
+		cfg:              cfg,
 	}
 }
 
@@ -66,7 +69,7 @@ func (r *router) setupPixelRoutes(api fiber.Router) {
 	pixelRoute.Get("/:id", r.pixelHandler.GetByID)
 	pixelRoute.Get("/coords", r.pixelHandler.GetByCoordinates)
 	pixelRoute.Get("/", r.pixelHandler.GetAll)
-	pixelRoute.Post("/", middleware.AuthProtected, r.pixelHandler.Change)
+	pixelRoute.Post("/", middleware.AuthProtected(r.cfg), r.pixelHandler.Change)
 }
 
 func (r *router) setupWebsocketRoutes(api fiber.Router) {

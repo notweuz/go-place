@@ -53,7 +53,7 @@ func NewApp(cfg *config.Config) *App {
 	app.Use(cors.New())
 	app.Use(middleware.Logger)
 
-	appRouter := http.NewRouter(app, authHR, userHR, pixelHR, wsHR)
+	appRouter := http.NewRouter(app, authHR, userHR, pixelHR, wsHR, cfg)
 	appRouter.Setup()
 
 	return &App{
