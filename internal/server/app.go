@@ -6,7 +6,7 @@ import (
 	"go-place/internal/domain/pixel"
 	"go-place/internal/domain/user"
 	"go-place/internal/middleware"
-	"go-place/internal/router"
+	"go-place/internal/transport/http"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -43,7 +43,7 @@ func NewApp(cfg *config.Config) *App {
 	app.Use(cors.New())
 	app.Use(middleware.Logger)
 
-	appRouter := router.NewRouter(app, authHR, userHR, pixelHR)
+	appRouter := http.NewRouter(app, authHR, userHR, pixelHR)
 	appRouter.Setup()
 
 	return &App{

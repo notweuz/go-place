@@ -1,4 +1,4 @@
-package router
+package http
 
 import (
 	"go-place/internal/domain/auth"
