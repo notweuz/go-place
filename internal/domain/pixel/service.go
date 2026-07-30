@@ -91,9 +91,9 @@ func (s *service) Change(x, y uint64, color string, newAuthor uint64) (*model.Pi
 		log.Error().Err(err).Uint64("new_author", newAuthor).Msg("Failed to spend charge")
 		return nil, err
 	}
-	pixel, err := s.repository.GetByCoordinates(x, y)
+	pixel, err := s.GetByCoordinates(x, y)
 	if err != nil {
-		if errors.Is(err, errs.ErrNotFound) {
+		if errors.Is(err, errs.ErrPixelNotFound) {
 			pixel = &model.Pixel{
 				X:      x,
 				Y:      y,
