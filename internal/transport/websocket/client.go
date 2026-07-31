@@ -15,19 +15,17 @@ type Client interface {
 }
 
 type client struct {
-	conn    *websocket.Conn
-	send    chan message.Base
-	done    chan struct{}
-	once    sync.Once
-	onClose func(Client)
+	conn *websocket.Conn
+	send chan message.Base
+	done chan struct{}
+	once sync.Once
 }
 
-func NewClient(conn *websocket.Conn, onClose func(Client)) Client {
+func NewClient(conn *websocket.Conn) Client {
 	return &client{
-		conn:    conn,
-		send:    make(chan message.Base, 256),
-		done:    make(chan struct{}),
-		onClose: onClose,
+		conn: conn,
+		send: make(chan message.Base, 256),
+		done: make(chan struct{}),
 	}
 }
 
@@ -67,8 +65,5 @@ func (c *client) Close() {
 			log.Error().Err(err).Msg("Failed to close connection with client")
 		}
 		close(c.done)
-		if c.onClose != nil {
-			c.onClose(c)
-		}
 	})
 }

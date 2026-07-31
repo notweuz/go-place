@@ -19,14 +19,13 @@ func NewHandler(hub Hub) Handler {
 
 func (h *handler) Upgrade() fiber.Handler {
 	return websocket.New(func(c *websocket.Conn) {
-		cl := NewClient(c, func(cli Client) {
-			h.hub.Unregister(cli)
-		})
+		cl := NewClient(c)
+
+		go cl.Write()
 
 		h.hub.Register(cl)
 		defer cl.Close()
-
-		go cl.Write()
+		defer h.hub.Unregister(cl)
 
 		for {
 			if _, _, err := c.ReadMessage(); err != nil {
