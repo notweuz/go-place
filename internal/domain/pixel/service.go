@@ -26,7 +26,6 @@ type Service interface {
 	GetAll(opts ...database.Option) ([]model.Pixel, error)
 	GetBinaryCanvas() ([]byte, error)
 	BuildCanvas() error
-	patchCanvas(x, y uint64, color string)
 	Change(pixels []request.ChangePixel, newAuthor uint64) ([]model.Pixel, error)
 	Update(pixel *model.Pixel) error
 	Delete(id uint64) error
