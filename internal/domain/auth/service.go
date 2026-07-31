@@ -56,7 +56,7 @@ func (s *service) Login(credentials *request.AuthCredentials) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !auth.VerifyPasswordHash(credentials.Password, userInDB.Password) {
+	if !auth.VerifyPasswordHash(userInDB.Password, credentials.Password) {
 		log.Error().Err(err).Msg("User login failed")
 		return nil, errs.ErrInvalidCredentials
 	}
