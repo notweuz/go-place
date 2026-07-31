@@ -66,8 +66,8 @@ func (r *router) setupUserRoutes(api fiber.Router) {
 func (r *router) setupPixelRoutes(api fiber.Router) {
 	log.Debug().Msg("Setting up pixel routes")
 	pixelRoute := api.Group("/pixel")
+	pixelRoute.Get("/search", r.pixelHandler.GetByCoordinates)
 	pixelRoute.Get("/:id", r.pixelHandler.GetByID)
-	pixelRoute.Get("/coords", r.pixelHandler.GetByCoordinates)
 	pixelRoute.Get("/", r.pixelHandler.GetAll)
 	pixelRoute.Post("/", middleware.AuthProtected(r.cfg), r.pixelHandler.Change)
 }
