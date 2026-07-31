@@ -23,6 +23,7 @@ var errorToStatusCode = map[error]int{
 	errs.ErrFailedBCrypt:        fiber.StatusInternalServerError,
 	errs.ErrFailedJWT:           fiber.StatusInternalServerError,
 	errs.ErrInternalServerError: fiber.StatusInternalServerError,
+	errs.ErrPixelOutOfBounds:    fiber.StatusBadRequest,
 }
 
 func ErrorHandler(ctx fiber.Ctx, err error) error {

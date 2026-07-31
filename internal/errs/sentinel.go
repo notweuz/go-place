@@ -18,4 +18,5 @@ var (
 	ErrInvalidCredentials  = errors.New("invalid credentials")
 	ErrUpgradeRequired     = errors.New("upgrade required")
 	ErrNotEnoughCharges    = errors.New("not enough charges")
+	ErrPixelOutOfBounds    = errors.New("pixel out of bounds")
 )

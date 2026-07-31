@@ -90,6 +90,10 @@ func (s *service) Change(x, y uint64, color string, newAuthor uint64) (*model.Pi
 		log.Error().Err(err).Msg("Failed to get settings")
 		return nil, err
 	}
+	if x >= settings.CanvasWidth || y >= settings.CanvasHeight {
+		log.Warn().Uint64("user_id", newAuthor).Uint64("x", x).Uint64("y", y).Msg("User attempted to create pixel outside of visible canvas")
+		return nil, errs.ErrPixelOutOfBounds
+	}
 	err = s.userService.SpendCharge(newAuthor, settings.MaxCharges, time.Duration(settings.CooldownSeconds)*time.Second)
 	if err != nil {
 		log.Error().Err(err).Uint64("new_author", newAuthor).Msg("Failed to spend charge")
