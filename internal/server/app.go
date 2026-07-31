@@ -35,7 +35,7 @@ func NewApp(cfg *config.Config) *App {
 	userSVC := user.NewService(userDB)
 	userHR := user.NewHandler(userSVC)
 
-	authSVC := auth.NewService(userSVC, cfg)
+	authSVC := auth.NewService(userSVC, settingSVC, cfg)
 	authHR := auth.NewHandler(authSVC)
 
 	wsHub := websocket.NewHub()

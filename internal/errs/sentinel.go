@@ -20,4 +20,5 @@ var (
 	ErrNotEnoughCharges    = errors.New("not enough charges")
 	ErrPixelOutOfBounds    = errors.New("pixel out of bounds")
 	ErrJWTMalformed        = errors.New("jwt malformed")
+	ErrRegistrationClosed  = errors.New("registration is closed")
 )

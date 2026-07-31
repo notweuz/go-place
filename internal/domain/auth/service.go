@@ -3,6 +3,7 @@ package auth
 import (
 	"go-place/internal/auth"
 	"go-place/internal/config"
+	"go-place/internal/domain/setting"
 	"go-place/internal/domain/user"
 	"go-place/internal/errs"
 	"go-place/internal/model"
@@ -17,16 +18,28 @@ type Service interface {
 }
 
 type service struct {
-	userService user.Service
-	config      *config.Config
+	userService    user.Service
+	settingService setting.Service
+	config         *config.Config
 }
 
-func NewService(userService user.Service, cfg *config.Config) Service {
-	return &service{userService: userService, config: cfg}
+func NewService(userService user.Service, settingService setting.Service, cfg *config.Config) Service {
+	return &service{userService: userService, settingService: settingService, config: cfg}
 }
 
 func (s *service) Register(credentials *request.AuthCredentials) (*string, error) {
 	log.Info().Str("username", credentials.Login).Msg("Registering user")
+
+	stg, err := s.settingService.Get()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get current server settings")
+		return nil, err
+	}
+	if !stg.RegistrationOpen {
+		log.Error().Msg("Registration is closed")
+		return nil, errs.ErrRegistrationClosed
+	}
+
 	passwordHash, err := auth.GeneratePasswordHash(credentials.Password)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate password hash")
