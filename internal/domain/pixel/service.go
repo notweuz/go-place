@@ -7,6 +7,8 @@ import (
 	"go-place/internal/domain/user"
 	"go-place/internal/errs"
 	"go-place/internal/model"
+	"go-place/internal/transport/websocket"
+	"go-place/internal/transport/websocket/message"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -27,10 +29,11 @@ type service struct {
 	repository     Repository
 	userService    user.Service
 	settingService setting.Service
+	wsHub          websocket.Hub
 }
 
-func NewService(repository Repository, userService user.Service, settingService setting.Service) Service {
-	return &service{repository: repository, userService: userService, settingService: settingService}
+func NewService(repository Repository, userService user.Service, settingService setting.Service, wsHub websocket.Hub) Service {
+	return &service{repository: repository, userService: userService, settingService: settingService, wsHub: wsHub}
 }
 
 func (s *service) Create(pixel *model.Pixel) error {
@@ -40,6 +43,7 @@ func (s *service) Create(pixel *model.Pixel) error {
 		log.Error().Err(err).Msg("Failed to create pixel")
 		return errs.ErrInternalServerError
 	}
+	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelChanged, *message.NewPixelChanged(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color)))
 	return nil
 }
 
@@ -132,6 +136,7 @@ func (s *service) Update(pixel *model.Pixel) error {
 		}
 		return errs.ErrInternalServerError
 	}
+	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelChanged, *message.NewPixelChanged(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color)))
 	return nil
 }
 

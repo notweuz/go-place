@@ -38,14 +38,14 @@ func NewApp(cfg *config.Config) *App {
 	authSVC := auth.NewService(userSVC, cfg)
 	authHR := auth.NewHandler(authSVC)
 
-	pixelDB := pixel.NewRepository(db)
-	pixelSVC := pixel.NewService(pixelDB, userSVC, settingSVC)
-	pixelHR := pixel.NewHandler(pixelSVC)
-
 	wsHub := websocket.NewHub()
 	go wsHub.Run()
 
 	wsHR := websocket.NewHandler(wsHub)
+
+	pixelDB := pixel.NewRepository(db)
+	pixelSVC := pixel.NewService(pixelDB, userSVC, settingSVC, wsHub)
+	pixelHR := pixel.NewHandler(pixelSVC)
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,

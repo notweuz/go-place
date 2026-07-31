@@ -7,3 +7,13 @@ type PixelChanged struct {
 	UserID uint64 `json:"user_id"`
 	Color  string `json:"color"`
 }
+
+func NewPixelChanged(id, x, y, userID uint64, color string) *PixelChanged {
+	return &PixelChanged{
+		ID:     id,
+		X:      x,
+		Y:      y,
+		UserID: userID,
+		Color:  color,
+	}
+}
