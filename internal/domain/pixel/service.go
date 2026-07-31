@@ -12,6 +12,7 @@ import (
 	"go-place/internal/transport/websocket"
 	"go-place/internal/transport/websocket/message"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
@@ -97,14 +98,17 @@ func (s *service) GetBinaryCanvas() ([]byte, error) {
 		return nil, err
 	}
 
-	buf := make([]byte, 8+w*h)
+	buf := make([]byte, 8+w*h*3)
 	binary.LittleEndian.PutUint32(buf[:4], uint32(w))
 	binary.LittleEndian.PutUint32(buf[4:8], uint32(h))
 
 	for _, p := range pixels {
 		if p.X < w && p.Y < h {
-			index := 8 + (p.Y*w + p.X)
-			buf[index] = parseColorToByte(p.Color)
+			index := 8 + (p.Y*w+p.X)*3
+			r, g, b := parseHexToRGB(p.Color)
+			buf[index] = r
+			buf[index+1] = g
+			buf[index+2] = b
 		}
 	}
 
@@ -184,9 +188,27 @@ func (s *service) Delete(id uint64) error {
 	return nil
 }
 
-func parseColorToByte(color string) byte {
-	if id, err := strconv.Atoi(color); err == nil && id >= 0 && id <= 255 {
-		return byte(id)
+func parseHexToRGB(color string) (r, g, b byte) {
+	cleanColor := strings.ToUpper(strings.TrimSpace(strings.TrimPrefix(color, "#")))
+
+	if len(cleanColor) == 6 {
+		rVal, err1 := strconv.ParseUint(cleanColor[0:2], 16, 8)
+		gVal, err2 := strconv.ParseUint(cleanColor[2:4], 16, 8)
+		bVal, err3 := strconv.ParseUint(cleanColor[4:6], 16, 8)
+		if err1 == nil && err2 == nil && err3 == nil {
+			return byte(rVal), byte(gVal), byte(bVal)
+		}
+	} else if len(cleanColor) == 3 {
+		rVal, err1 := strconv.ParseUint(cleanColor[0:1]+cleanColor[0:1], 16, 8)
+		gVal, err2 := strconv.ParseUint(cleanColor[1:2]+cleanColor[1:2], 16, 8)
+		bVal, err3 := strconv.ParseUint(cleanColor[2:3]+cleanColor[2:3], 16, 8)
+		if err1 == nil && err2 == nil && err3 == nil {
+			return byte(rVal), byte(gVal), byte(bVal)
+		}
+	} else if id, err := strconv.Atoi(color); err == nil && id >= 0 && id <= 255 {
+		bVal := byte(id)
+		return bVal, bVal, bVal
 	}
-	return 0
+
+	return 0, 0, 0
 }
