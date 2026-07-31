@@ -14,6 +14,7 @@ type Handler interface {
 	GetByID(ctx fiber.Ctx) error
 	GetByCoordinates(ctx fiber.Ctx) error
 	GetAll(ctx fiber.Ctx) error
+	GetBinaryCanvas(ctx fiber.Ctx) error
 	Change(ctx fiber.Ctx) error
 }
 
@@ -62,6 +63,16 @@ func (h *handler) GetAll(ctx fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(pixelsFull)
+}
+
+func (h *handler) GetBinaryCanvas(ctx fiber.Ctx) error {
+	buf, err := h.service.GetBinaryCanvas()
+	if err != nil {
+		return err
+	}
+
+	ctx.Type("octet-stream")
+	return ctx.Status(fiber.StatusOK).Send(buf)
 }
 
 func (h *handler) Change(ctx fiber.Ctx) error {
