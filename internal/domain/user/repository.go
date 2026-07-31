@@ -9,8 +9,8 @@ import (
 )
 
 type Repository interface {
-	Create(user *model.User) error
-	Update(user *model.User) error
+	Create(user *model.User, opts ...database.Option) error
+	Update(user *model.User, opts ...database.Option) error
 	GetByID(id uint64, opts ...database.Option) (*model.User, error)
 	GetByUsername(username string, opts ...database.Option) (*model.User, error)
 	GetAll(opts ...database.Option) ([]model.User, error)
@@ -25,18 +25,26 @@ func NewRepository(db *gorm.DB) Repository {
 	return &repository{db: db}
 }
 
-func (r *repository) Create(user *model.User) error {
+func (r *repository) Create(user *model.User, opts ...database.Option) error {
 	log.Debug().Uint64("user_id", user.ID).Str("username", user.Username).Msg("Creating user")
-	err := r.db.Create(user).Error
+	db := r.db
+	for _, opt := range opts {
+		db = opt(db)
+	}
+	err := db.Create(user).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create user")
 	}
 	return err
 }
 
-func (r *repository) Update(user *model.User) error {
+func (r *repository) Update(user *model.User, opts ...database.Option) error {
 	log.Debug().Uint64("user_id", user.ID).Msg("Updating user")
-	err := r.db.Save(user).Error
+	db := r.db
+	for _, opt := range opts {
+		db = opt(db)
+	}
+	err := db.Save(user).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update user")
 	}
