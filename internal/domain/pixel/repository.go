@@ -39,7 +39,7 @@ func (r *repository) Update(pixel *model.Pixel) error {
 	log.Debug().Uint64("x", pixel.X).Uint64("y", pixel.Y).Msg("updating pixel")
 	err := r.db.Save(pixel).Error
 	if err != nil {
-		log.Error().Err(err).Msg("pixel creation failed")
+		log.Error().Err(err).Msg("pixel updating failed")
 	}
 	return err
 }
