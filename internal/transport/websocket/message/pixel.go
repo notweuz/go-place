@@ -17,3 +17,13 @@ func NewPixelChanged(id, x, y, userID uint64, color string) *PixelChanged {
 		Color:  color,
 	}
 }
+
+type PixelsChanged struct {
+	Pixels []PixelChanged `json:"pixels"`
+}
+
+func NewPixelsChanged(pixels []PixelChanged) *PixelsChanged {
+	return &PixelsChanged{
+		Pixels: pixels,
+	}
+}

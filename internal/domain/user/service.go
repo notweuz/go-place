@@ -19,7 +19,7 @@ type Service interface {
 	Update(user *model.User) error
 	Delete(id uint64) error
 	SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration) (*model.User, error)
-	SpendCharge(id uint64, maxCharges uint, regenRate time.Duration) error
+	SpendCharge(id uint64, maxCharges uint, pixelsToSpend uint, regenRate time.Duration) error
 }
 
 type service struct {
@@ -123,7 +123,7 @@ func (s *service) SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration
 	return user, nil
 }
 
-func (s *service) SpendCharge(id uint64, maxCharges uint, regenRate time.Duration) error {
+func (s *service) SpendCharge(id uint64, maxCharges uint, pixelsToSpend uint, regenRate time.Duration) error {
 	user, err := s.GetByID(id)
 	if err != nil {
 		return err
@@ -131,11 +131,11 @@ func (s *service) SpendCharge(id uint64, maxCharges uint, regenRate time.Duratio
 
 	user.SyncCharges(maxCharges, regenRate)
 
-	if user.Charges < 1 {
+	if user.Charges < pixelsToSpend {
 		return errs.ErrNotEnoughCharges
 	}
 
-	user.Charges--
+	user.Charges -= pixelsToSpend
 
 	return s.Update(user)
 }

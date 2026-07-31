@@ -65,11 +65,11 @@ func (h *handler) GetAll(ctx fiber.Ctx) error {
 }
 
 func (h *handler) Change(ctx fiber.Ctx) error {
-	var changePixel request.ChangePixel
-	if err := ctx.Bind().Body(&changePixel); err != nil {
+	var changePixels request.ChangePixels
+	if err := ctx.Bind().Body(&changePixels); err != nil {
 		return errs.BadRequest(err, "invalid request body")
 	}
-	if err := validation.Validate(&changePixel); err != nil {
+	if err := validation.Validate(&changePixels); err != nil {
 		return err
 	}
 	userID, err := middleware.GetCurrentUserID(ctx)
@@ -77,12 +77,15 @@ func (h *handler) Change(ctx fiber.Ctx) error {
 		return err
 	}
 
-	pixel, err := h.service.Change(changePixel.X, changePixel.Y, changePixel.Color, userID)
+	pixels, err := h.service.Change(changePixels.Pixels, userID)
 	if err != nil {
 		return err
 	}
 
-	pixelFull := response.NewPixelFull(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color, pixel.CreatedAt, pixel.UpdatedAt)
+	pixelsFull := make([]response.PixelFull, len(pixels))
+	for i, pixel := range pixels {
+		pixelsFull[i] = *response.NewPixelFull(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color, pixel.CreatedAt, pixel.UpdatedAt)
+	}
 
-	return ctx.Status(fiber.StatusOK).JSON(pixelFull)
+	return ctx.Status(fiber.StatusOK).JSON(response.NewPixelsChangeFull(pixelsFull))
 }

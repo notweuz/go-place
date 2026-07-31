@@ -24,3 +24,11 @@ func NewPixelFull(id, x, y, userID uint64, color string, createdAt, updatedAt ti
 		UpdatedAt: updatedAt,
 	}
 }
+
+type PixelsChangeFull struct {
+	Pixels []PixelFull `json:"pixels"`
+}
+
+func NewPixelsChangeFull(pixels []PixelFull) *PixelsChangeFull {
+	return &PixelsChangeFull{Pixels: pixels}
+}

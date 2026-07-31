@@ -7,6 +7,7 @@ import (
 	"go-place/internal/domain/user"
 	"go-place/internal/errs"
 	"go-place/internal/model"
+	"go-place/internal/model/request"
 	"go-place/internal/transport/websocket"
 	"go-place/internal/transport/websocket/message"
 	"time"
@@ -20,7 +21,7 @@ type Service interface {
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
 	GetAll(opts ...database.Option) ([]model.Pixel, error)
-	Change(x, y uint64, color string, newAuthor uint64) (*model.Pixel, error)
+	Change(pixels []request.ChangePixel, newAuthor uint64) ([]model.Pixel, error)
 	Update(pixel *model.Pixel) error
 	Delete(id uint64) error
 }
@@ -83,51 +84,43 @@ func (s *service) GetAll(opts ...database.Option) ([]model.Pixel, error) {
 	return pixels, nil
 }
 
-func (s *service) Change(x, y uint64, color string, newAuthor uint64) (*model.Pixel, error) {
-	log.Info().Uint64("x", x).Uint64("y", y).Str("col", color).Uint64("new_author", newAuthor).Msg("Attempting to change pixel")
+func (s *service) Change(pixels []request.ChangePixel, newAuthor uint64) ([]model.Pixel, error) {
+	log.Info().Int("count", len(pixels)).Uint64("author", newAuthor).Msg("Attempting to change pixels")
+
 	settings, err := s.settingService.Get()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get settings")
 		return nil, err
 	}
-	if x >= settings.CanvasWidth || y >= settings.CanvasHeight {
-		log.Warn().Uint64("user_id", newAuthor).Uint64("x", x).Uint64("y", y).Msg("User attempted to create pixel outside of visible canvas")
-		return nil, errs.ErrPixelOutOfBounds
-	}
-	err = s.userService.SpendCharge(newAuthor, settings.MaxCharges, time.Duration(settings.CooldownSeconds)*time.Second)
-	if err != nil {
-		log.Error().Err(err).Uint64("new_author", newAuthor).Msg("Failed to spend charge")
-		return nil, err
-	}
-	pixel, err := s.GetByCoordinates(x, y)
-	if err != nil {
-		if errors.Is(err, errs.ErrPixelNotFound) {
-			pixel = &model.Pixel{
-				X:      x,
-				Y:      y,
-				Color:  color,
-				UserID: newAuthor,
-			}
-			err = s.Create(pixel)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to create pixel")
-				return nil, err
-			}
-			return pixel, nil
+
+	for _, p := range pixels {
+		if p.X >= settings.CanvasWidth || p.Y >= settings.CanvasHeight {
+			return nil, errs.ErrPixelOutOfBounds
 		}
-		log.Error().Err(err).Msg("Failed to get pixel")
-		return nil, err
 	}
 
-	pixel.Color = color
-	pixel.UserID = newAuthor
-	err = s.Update(pixel)
+	err = s.userService.SpendCharge(newAuthor, settings.MaxCharges, uint(len(pixels)), time.Duration(settings.CooldownSeconds)*time.Second)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to update pixel")
 		return nil, err
 	}
 
-	return pixel, nil
+	models := make([]model.Pixel, len(pixels))
+	for i, p := range pixels {
+		models[i] = model.Pixel{X: p.X, Y: p.Y, Color: p.Color, UserID: newAuthor}
+	}
+
+	result, err := s.repository.Upsert(models)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to upsert pixels")
+		return nil, errs.ErrInternalServerError
+	}
+
+	changed := make([]message.PixelChanged, len(result))
+	for i, px := range result {
+		changed[i] = *message.NewPixelChanged(px.ID, px.X, px.Y, px.UserID, px.Color)
+	}
+	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelsChanged, message.NewPixelsChanged(changed)))
+
+	return result, nil
 }
 
 func (s *service) Update(pixel *model.Pixel) error {

@@ -7,11 +7,13 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Repository interface {
 	Create(pixel *model.Pixel) error
 	Update(pixel *model.Pixel) error
+	Upsert(pixels []model.Pixel) ([]model.Pixel, error)
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
 	GetAll(opts ...database.Option) ([]model.Pixel, error)
@@ -33,6 +35,19 @@ func (r *repository) Create(pixel *model.Pixel) error {
 		log.Error().Err(err).Msg("pixel creation failed")
 	}
 	return err
+}
+
+func (r *repository) Upsert(pixels []model.Pixel) ([]model.Pixel, error) {
+	log.Debug().Int("count", len(pixels)).Msg("upserting pixels")
+	err := r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "x"}, {Name: "y"}},
+		DoUpdates: clause.AssignmentColumns([]string{"color", "user_id", "updated_at"}),
+	}).Create(&pixels).Error
+	if err != nil {
+		log.Error().Err(err).Msg("pixel upsert failed")
+		return nil, err
+	}
+	return pixels, nil
 }
 
 func (r *repository) Update(pixel *model.Pixel) error {
