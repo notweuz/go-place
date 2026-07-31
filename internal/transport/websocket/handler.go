@@ -24,8 +24,8 @@ func (h *handler) Upgrade() fiber.Handler {
 		go cl.Write()
 
 		h.hub.Register(cl)
-		defer cl.Close()
 		defer h.hub.Unregister(cl)
+		defer cl.Close()
 
 		// websocket is read-only right now, so ReadMessage is used only for connection loss detection purposes
 		for {
