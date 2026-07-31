@@ -44,7 +44,7 @@ func (s *service) Create(pixel *model.Pixel) error {
 		log.Error().Err(err).Msg("Failed to create pixel")
 		return errs.ErrInternalServerError
 	}
-	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelChanged, *message.NewPixelChanged(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color)))
+	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelsChanged, message.NewPixelsChanged([]message.PixelChanged{*message.NewPixelChanged(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color)})))
 	return nil
 }
 
@@ -133,7 +133,7 @@ func (s *service) Update(pixel *model.Pixel) error {
 		}
 		return errs.ErrInternalServerError
 	}
-	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelChanged, *message.NewPixelChanged(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color)))
+	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelsChanged, message.NewPixelsChanged([]message.PixelChanged{*message.NewPixelChanged(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color)})))
 	return nil
 }
 
