@@ -13,6 +13,7 @@ import (
 	"go-place/internal/transport/websocket/message"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
@@ -24,6 +25,8 @@ type Service interface {
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
 	GetAll(opts ...database.Option) ([]model.Pixel, error)
 	GetBinaryCanvas() ([]byte, error)
+	BuildCanvas() error
+	patchCanvas(x, y uint64, color string)
 	Change(pixels []request.ChangePixel, newAuthor uint64) ([]model.Pixel, error)
 	Update(pixel *model.Pixel) error
 	Delete(id uint64) error
@@ -34,6 +37,11 @@ type service struct {
 	userService    user.Service
 	settingService setting.Service
 	wsHub          websocket.Hub
+
+	canvasMu  sync.RWMutex
+	canvasBuf []byte
+	canvasW   uint64
+	canvasH   uint64
 }
 
 func NewService(repository Repository, userService user.Service, settingService setting.Service, wsHub websocket.Hub) Service {
@@ -47,6 +55,7 @@ func (s *service) Create(pixel *model.Pixel) error {
 		log.Error().Err(err).Msg("Failed to create pixel")
 		return errs.ErrInternalServerError
 	}
+	s.patchCanvas(pixel.X, pixel.Y, pixel.Color)
 	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelsChanged, message.NewPixelsChanged([]message.PixelChanged{*message.NewPixelChanged(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color)})))
 	return nil
 }
@@ -88,14 +97,30 @@ func (s *service) GetAll(opts ...database.Option) ([]model.Pixel, error) {
 }
 
 func (s *service) GetBinaryCanvas() ([]byte, error) {
+	s.canvasMu.RLock()
+	if s.canvasBuf == nil {
+		s.canvasMu.RUnlock()
+		if err := s.BuildCanvas(); err != nil {
+			return nil, err
+		}
+		s.canvasMu.RLock()
+	}
+	defer s.canvasMu.RUnlock()
+
+	out := make([]byte, len(s.canvasBuf))
+	copy(out, s.canvasBuf)
+	return out, nil
+}
+
+func (s *service) BuildCanvas() error {
 	settings, err := s.settingService.Get()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	w, h := settings.CanvasWidth, settings.CanvasHeight
 	pixels, err := s.GetAll()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	buf := make([]byte, 8+w*h*3)
@@ -106,13 +131,29 @@ func (s *service) GetBinaryCanvas() ([]byte, error) {
 		if p.X < w && p.Y < h {
 			index := 8 + (p.Y*w+p.X)*3
 			r, g, b := parseHexToRGB(p.Color)
-			buf[index] = r
-			buf[index+1] = g
-			buf[index+2] = b
+			buf[index], buf[index+1], buf[index+2] = r, g, b
 		}
 	}
 
-	return buf, nil
+	s.canvasMu.Lock()
+	s.canvasW, s.canvasH = w, h
+	s.canvasBuf = buf
+	s.canvasMu.Unlock()
+
+	return nil
+}
+
+func (s *service) patchCanvas(x, y uint64, color string) {
+	s.canvasMu.Lock()
+	defer s.canvasMu.Unlock()
+
+	if s.canvasBuf == nil || x >= s.canvasW || y >= s.canvasH {
+		return
+	}
+
+	index := 8 + (y*s.canvasW+x)*3
+	r, g, b := parseHexToRGB(color)
+	s.canvasBuf[index], s.canvasBuf[index+1], s.canvasBuf[index+2] = r, g, b
 }
 
 func (s *service) Change(pixels []request.ChangePixel, newAuthor uint64) ([]model.Pixel, error) {
@@ -155,6 +196,7 @@ func (s *service) Change(pixels []request.ChangePixel, newAuthor uint64) ([]mode
 	changed := make([]message.PixelChanged, len(result))
 	for i, px := range result {
 		changed[i] = *message.NewPixelChanged(px.ID, px.X, px.Y, px.UserID, px.Color)
+		s.patchCanvas(px.X, px.Y, px.Color)
 	}
 	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelsChanged, message.NewPixelsChanged(changed)))
 
@@ -171,6 +213,7 @@ func (s *service) Update(pixel *model.Pixel) error {
 		}
 		return errs.ErrInternalServerError
 	}
+	s.patchCanvas(pixel.X, pixel.Y, pixel.Color)
 	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelsChanged, message.NewPixelsChanged([]message.PixelChanged{*message.NewPixelChanged(pixel.ID, pixel.X, pixel.Y, pixel.UserID, pixel.Color)})))
 	return nil
 }
