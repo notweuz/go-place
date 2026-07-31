@@ -7,6 +7,7 @@ import (
 	"go-place/internal/model/response"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/rs/zerolog/log"
 )
 
 var errorToStatusCode = map[error]int{
@@ -48,6 +49,8 @@ func ErrorHandler(ctx fiber.Ctx, err error) error {
 			break
 		}
 	}
+
+	log.Error().Err(err).Int("status", statusCode).Msgf("HTTP %s %s failed", ctx.Method(), ctx.Path())
 
 	return ctx.Status(statusCode).JSON(response.ErrorResponse{
 		Error: message,
