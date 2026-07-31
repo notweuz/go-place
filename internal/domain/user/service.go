@@ -20,8 +20,8 @@ type Service interface {
 	GetSelf(id uint64) (*model.User, error)
 	Update(user *model.User, opts ...database.Option) error
 	Delete(id uint64) error
-	SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration) (*model.User, error)
-	SpendCharge(id uint64, maxCharges uint, pixelsToSpend uint, regenRate time.Duration, opts ...database.Option) error
+	SyncAndGet(id uint64) (*model.User, error)
+	SpendCharge(id uint64, pixelsToSpend uint, opts ...database.Option) error
 }
 
 type service struct {
@@ -113,14 +113,19 @@ func (s *service) Delete(id uint64) error {
 	return nil
 }
 
-func (s *service) SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration) (*model.User, error) {
+func (s *service) SyncAndGet(id uint64) (*model.User, error) {
+	stg, err := s.settingService.Get()
+	if err != nil {
+		return nil, err
+	}
+
 	fetchOpts := []database.Option{database.WithLock()}
 	user, err := s.GetByID(id, fetchOpts...)
 	if err != nil {
 		return nil, err
 	}
 
-	user.SyncCharges(maxCharges, regenRate)
+	user.SyncCharges(stg.MaxCharges, time.Duration(stg.CooldownSeconds)*time.Second)
 
 	err = s.Update(user)
 	if err != nil {
@@ -147,14 +152,19 @@ func (s *service) GetSelf(id uint64) (*model.User, error) {
 	return user, nil
 }
 
-func (s *service) SpendCharge(id uint64, maxCharges uint, pixelsToSpend uint, regenRate time.Duration, opts ...database.Option) error {
+func (s *service) SpendCharge(id uint64, pixelsToSpend uint, opts ...database.Option) error {
+	stg, err := s.settingService.Get()
+	if err != nil {
+		return err
+	}
+
 	fetchOpts := append([]database.Option{database.WithLock()}, opts...)
 	user, err := s.GetByID(id, fetchOpts...)
 	if err != nil {
 		return err
 	}
 
-	user.SyncCharges(maxCharges, regenRate)
+	user.SyncCharges(stg.MaxCharges, time.Duration(stg.CooldownSeconds)*time.Second)
 
 	if user.Charges < pixelsToSpend {
 		return errs.ErrNotEnoughCharges

@@ -10,7 +10,6 @@ import (
 	"go-place/internal/model/request"
 	"go-place/internal/transport/websocket"
 	"go-place/internal/transport/websocket/message"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
@@ -105,7 +104,7 @@ func (s *service) Change(pixels []request.ChangePixel, newAuthor uint64) ([]mode
 		dedupedPixels = append(dedupedPixels, p)
 	}
 
-	err = s.userService.SpendCharge(newAuthor, settings.MaxCharges, uint(len(dedupedPixels)), time.Duration(settings.CooldownSeconds)*time.Second)
+	err = s.userService.SpendCharge(newAuthor, uint(len(dedupedPixels)))
 	if err != nil {
 		return nil, err
 	}
