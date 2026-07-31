@@ -58,7 +58,7 @@ func (c *client) Write() {
 }
 
 func (c *client) Close() {
-	c.once.Do(func() {
+	c.once.Do(func() { // technically, I could have done without `once.Do`, but I would have had to refactor the connection code, so I'll just leave it as is.
 		log.Debug().Msg("Closing connection with client")
 		err := c.conn.Close()
 		if err != nil {

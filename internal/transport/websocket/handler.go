@@ -27,6 +27,7 @@ func (h *handler) Upgrade() fiber.Handler {
 		defer cl.Close()
 		defer h.hub.Unregister(cl)
 
+		// websocket is read-only right now, so ReadMessage is used only for connection loss detection purposes
 		for {
 			if _, _, err := c.ReadMessage(); err != nil {
 				break
