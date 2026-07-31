@@ -37,7 +37,7 @@ func (h *handler) GetCurrentUser(ctx fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	user, err := h.service.GetByID(id)
+	user, err := h.service.GetSelf(id)
 	if err != nil {
 		return err
 	}

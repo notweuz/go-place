@@ -41,7 +41,7 @@ func NewApp(cfg *config.Config) App {
 	settingSVC := setting.NewService(settingDB)
 
 	userDB := user.NewRepository(db)
-	userSVC := user.NewService(userDB)
+	userSVC := user.NewService(userDB, settingSVC)
 	userHR := user.NewHandler(userSVC)
 
 	authSVC := auth.NewService(userSVC, settingSVC, cfg)

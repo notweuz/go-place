@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"go-place/internal/database"
+	"go-place/internal/domain/setting"
 	"go-place/internal/errs"
 	"go-place/internal/model"
 	"time"
@@ -16,6 +17,7 @@ type Service interface {
 	GetByID(id uint64, opts ...database.Option) (*model.User, error)
 	GetByUsername(username string, opts ...database.Option) (*model.User, error)
 	GetAll(opts ...database.Option) ([]model.User, error)
+	GetSelf(id uint64) (*model.User, error)
 	Update(user *model.User, opts ...database.Option) error
 	Delete(id uint64) error
 	SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration) (*model.User, error)
@@ -23,11 +25,15 @@ type Service interface {
 }
 
 type service struct {
-	repository Repository
+	repository     Repository
+	settingService setting.Service
 }
 
-func NewService(repository Repository) Service {
-	return &service{repository: repository}
+func NewService(repository Repository, settingService setting.Service) Service {
+	return &service{
+		repository:     repository,
+		settingService: settingService,
+	}
 }
 
 func (s *service) Create(user *model.User) error {
@@ -121,6 +127,23 @@ func (s *service) SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration
 		return nil, err
 	}
 
+	return user, nil
+}
+
+func (s *service) GetSelf(id uint64) (*model.User, error) {
+	log.Info().Uint64("id", id).Msg("Getting self profile with in-memory charge sync")
+	user, err := s.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	stg, err := s.settingService.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	// I'm not sure, but I think it's possible to use SyncAndGet function, but it's gonna block user entry, so ig I'll leave it as it is
+	user.SyncCharges(stg.MaxCharges, time.Duration(stg.CooldownSeconds)*time.Second)
 	return user, nil
 }
 
