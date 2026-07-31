@@ -42,7 +42,7 @@ func (h *handler) GetCurrentUser(ctx fiber.Ctx) error {
 		return err
 	}
 
-	userResponse := response.NewUserPublic(user.ID, user.Username, user.CreatedAt)
+	userResponse := response.NewUserPrivateDetailed(user.ID, user.Username, user.Charges, user.LastChargeAt, user.CreatedAt, user.UpdatedAt)
 
 	return ctx.Status(fiber.StatusOK).JSON(userResponse)
 }
