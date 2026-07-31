@@ -58,6 +58,11 @@ func NewApp(cfg *config.Config) App {
 	pixelSVC := pixel.NewService(pixelDB, userSVC, settingSVC, wsHub)
 	pixelHR := pixel.NewHandler(pixelSVC)
 
+	err = pixelSVC.BuildCanvas()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to build pixel byte canvas")
+	}
+
 	application := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
 	})
