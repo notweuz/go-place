@@ -1,6 +1,7 @@
 package pixel
 
 import (
+	"encoding/binary"
 	"errors"
 	"go-place/internal/database"
 	"go-place/internal/domain/setting"
@@ -10,6 +11,7 @@ import (
 	"go-place/internal/model/request"
 	"go-place/internal/transport/websocket"
 	"go-place/internal/transport/websocket/message"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
@@ -20,6 +22,7 @@ type Service interface {
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
 	GetAll(opts ...database.Option) ([]model.Pixel, error)
+	GetBinaryCanvas() ([]byte, error)
 	Change(pixels []request.ChangePixel, newAuthor uint64) ([]model.Pixel, error)
 	Update(pixel *model.Pixel) error
 	Delete(id uint64) error
@@ -81,6 +84,31 @@ func (s *service) GetAll(opts ...database.Option) ([]model.Pixel, error) {
 		return nil, errs.ErrInternalServerError
 	}
 	return pixels, nil
+}
+
+func (s *service) GetBinaryCanvas() ([]byte, error) {
+	settings, err := s.settingService.Get()
+	if err != nil {
+		return nil, err
+	}
+	w, h := settings.CanvasWidth, settings.CanvasHeight
+	pixels, err := s.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	buf := make([]byte, 8+w*h)
+	binary.LittleEndian.PutUint32(buf[:4], uint32(w))
+	binary.LittleEndian.PutUint32(buf[4:8], uint32(h))
+
+	for _, p := range pixels {
+		if p.X < w && p.Y < h {
+			index := 8 + (p.Y*w + p.X)
+			buf[index] = parseColorToByte(p.Color)
+		}
+	}
+
+	return buf, nil
 }
 
 func (s *service) Change(pixels []request.ChangePixel, newAuthor uint64) ([]model.Pixel, error) {
@@ -154,4 +182,11 @@ func (s *service) Delete(id uint64) error {
 		return errs.ErrInternalServerError
 	}
 	return nil
+}
+
+func parseColorToByte(color string) byte {
+	if id, err := strconv.Atoi(color); err == nil && id >= 0 && id <= 255 {
+		return byte(id)
+	}
+	return 0
 }
