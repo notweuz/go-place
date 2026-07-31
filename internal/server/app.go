@@ -39,6 +39,7 @@ func NewApp(cfg *config.Config) App {
 
 	settingDB := setting.NewRepository(db)
 	settingSVC := setting.NewService(settingDB)
+	settingHR := setting.NewHandler(settingSVC)
 
 	userDB := user.NewRepository(db)
 	userSVC := user.NewService(userDB, settingSVC)
@@ -63,7 +64,7 @@ func NewApp(cfg *config.Config) App {
 	application.Use(cors.New())
 	application.Use(middleware.Logger)
 
-	appRouter := http.NewRouter(application, authHR, userHR, pixelHR, wsHR, cfg)
+	appRouter := http.NewRouter(application, authHR, userHR, pixelHR, settingHR, wsHR, cfg)
 	appRouter.Setup()
 
 	return &app{
