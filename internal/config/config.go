@@ -21,7 +21,7 @@ func NewConfig() (*Config, error) {
 
 	err := godotenv.Load()
 	if err != nil {
-		return nil, err
+		log.Warn().Err(err).Msg("Failed to load .env file, using environment variables")
 	}
 
 	databaseDSN := os.Getenv("DATABASE_DSN")
