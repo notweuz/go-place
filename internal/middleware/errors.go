@@ -31,22 +31,21 @@ var errorToStatusCode = map[error]int{
 
 func ErrorHandler(ctx fiber.Ctx, err error) error {
 	var appError *errs.AppError
-	if errors.As(err, &appError) {
-		return ctx.Status(appError.StatusCode).JSON(response.ErrorResponse{
-			Error: appError.Message,
-		})
-	}
-
 	statusCode := fiber.StatusInternalServerError
 	message := "internal server error"
 
-	for targetErr, code := range errorToStatusCode {
-		if errors.Is(err, targetErr) {
-			statusCode = code
-			if code != fiber.StatusInternalServerError {
-				message = err.Error()
+	if errors.As(err, &appError) {
+		statusCode = appError.StatusCode
+		message = appError.Message
+	} else {
+		for targetErr, code := range errorToStatusCode {
+			if errors.Is(err, targetErr) {
+				statusCode = code
+				if code != fiber.StatusInternalServerError {
+					message = err.Error()
+				}
+				break
 			}
-			break
 		}
 	}
 
