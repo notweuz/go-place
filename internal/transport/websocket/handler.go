@@ -1,8 +1,6 @@
 package websocket
 
 import (
-	"go-place/internal/transport/websocket/message"
-
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
 )
@@ -21,17 +19,17 @@ func NewHandler(hub Hub) Handler {
 
 func (h *handler) Upgrade() fiber.Handler {
 	return websocket.New(func(c *websocket.Conn) {
-		cl := NewClient(c)
+		cl := NewClient(c, func(cli Client) {
+			h.hub.Unregister(cli)
+		})
 
 		h.hub.Register(cl)
-		defer h.hub.Unregister(cl)
+		defer cl.Close()
 
 		go cl.Write()
 
 		for {
-			var msg message.Base
-			err := c.ReadJSON(&msg)
-			if err != nil {
+			if _, _, err := c.ReadMessage(); err != nil {
 				break
 			}
 		}

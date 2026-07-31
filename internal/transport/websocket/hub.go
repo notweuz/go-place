@@ -55,7 +55,6 @@ func (h *hub) Run() {
 			}
 		case cl := <-h.unregister:
 			if _, ok := h.clients[cl]; ok {
-				cl.Close()
 				delete(h.clients, cl)
 			}
 		case msg := <-h.broadcast:
