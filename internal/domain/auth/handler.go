@@ -36,7 +36,7 @@ func (h *handler) Register(ctx fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.Status(fiber.StatusCreated).JSON(response.AuthToken{Token: *token})
+	return ctx.Status(fiber.StatusOK).JSON(response.AuthToken{Token: *token})
 }
 
 func (h *handler) Login(ctx fiber.Ctx) error {
@@ -54,5 +54,5 @@ func (h *handler) Login(ctx fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.Status(fiber.StatusCreated).JSON(response.AuthToken{Token: *token})
+	return ctx.Status(fiber.StatusOK).JSON(response.AuthToken{Token: *token})
 }
