@@ -18,14 +18,18 @@ import (
 	"gorm.io/gorm"
 )
 
-type App struct {
+type App interface {
+	Shutdown()
+}
+
+type app struct {
 	DB       *gorm.DB
 	Config   *config.Config
 	Fiber    *fiber.App
 	wsCancel context.CancelFunc
 }
 
-func NewApp(cfg *config.Config) *App {
+func NewApp(cfg *config.Config) App {
 	db, err := SetupDatabase(cfg)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to start database!")
@@ -51,24 +55,24 @@ func NewApp(cfg *config.Config) *App {
 	pixelSVC := pixel.NewService(pixelDB, userSVC, settingSVC, wsHub)
 	pixelHR := pixel.NewHandler(pixelSVC)
 
-	app := fiber.New(fiber.Config{
+	application := fiber.New(fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
 	})
-	app.Use(cors.New())
-	app.Use(middleware.Logger)
+	application.Use(cors.New())
+	application.Use(middleware.Logger)
 
-	appRouter := http.NewRouter(app, authHR, userHR, pixelHR, wsHR, cfg)
+	appRouter := http.NewRouter(application, authHR, userHR, pixelHR, wsHR, cfg)
 	appRouter.Setup()
 
-	return &App{
+	return &app{
 		DB:       db,
 		Config:   cfg,
-		Fiber:    app,
+		Fiber:    application,
 		wsCancel: cancel,
 	}
 }
 
-func (a *App) Shutdown() {
+func (a *app) Shutdown() {
 	log.Info().Msg("Shutting down server")
 	a.wsCancel()
 	log.Info().Msg("WS Hub stopped")
