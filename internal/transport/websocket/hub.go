@@ -8,7 +8,7 @@ import (
 )
 
 type Hub interface {
-	Run(ctx context.Context)
+	Run()
 	Broadcast(message message.Base)
 	Register(Client)
 	Unregister(Client)
@@ -22,12 +22,13 @@ type hub struct {
 	ctx        context.Context
 }
 
-func NewHub() Hub {
+func NewHub(ctx context.Context) Hub {
 	return &hub{
 		clients:    make(map[Client]bool),
 		register:   make(chan Client),
 		unregister: make(chan Client),
 		broadcast:  make(chan message.Base),
+		ctx:        ctx,
 	}
 }
 
@@ -56,11 +57,10 @@ func (h *hub) Unregister(client Client) {
 	}
 }
 
-func (h *hub) Run(ctx context.Context) {
-	h.ctx = ctx
+func (h *hub) Run() {
 	for {
 		select {
-		case <-ctx.Done():
+		case <-h.ctx.Done():
 			for cl := range h.clients {
 				cl.Close()
 				delete(h.clients, cl)

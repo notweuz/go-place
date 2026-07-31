@@ -46,8 +46,8 @@ func NewApp(cfg *config.Config) App {
 	authHR := auth.NewHandler(authSVC)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	wsHub := websocket.NewHub()
-	go wsHub.Run(ctx)
+	wsHub := websocket.NewHub(ctx)
+	go wsHub.Run()
 
 	wsHR := websocket.NewHandler(wsHub)
 
