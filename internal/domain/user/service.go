@@ -16,10 +16,10 @@ type Service interface {
 	GetByID(id uint64, opts ...database.Option) (*model.User, error)
 	GetByUsername(username string, opts ...database.Option) (*model.User, error)
 	GetAll(opts ...database.Option) ([]model.User, error)
-	Update(user *model.User) error
+	Update(user *model.User, opts ...database.Option) error
 	Delete(id uint64) error
 	SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration) (*model.User, error)
-	SpendCharge(id uint64, maxCharges uint, pixelsToSpend uint, regenRate time.Duration) error
+	SpendCharge(id uint64, maxCharges uint, pixelsToSpend uint, regenRate time.Duration, opts ...database.Option) error
 }
 
 type service struct {
@@ -79,9 +79,9 @@ func (s *service) GetAll(opts ...database.Option) ([]model.User, error) {
 	return users, nil
 }
 
-func (s *service) Update(user *model.User) error {
+func (s *service) Update(user *model.User, opts ...database.Option) error {
 	log.Info().Uint64("id", user.ID).Str("username", user.Username).Msg("Updating user")
-	err := s.repository.Update(user)
+	err := s.repository.Update(user, opts...)
 	if err != nil {
 		log.Error().Err(err).Uint64("id", user.ID).Msg("Failed to update user")
 		switch {
@@ -108,7 +108,8 @@ func (s *service) Delete(id uint64) error {
 }
 
 func (s *service) SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration) (*model.User, error) {
-	user, err := s.GetByID(id)
+	fetchOpts := []database.Option{database.WithLock()}
+	user, err := s.GetByID(id, fetchOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -123,8 +124,9 @@ func (s *service) SyncAndGet(id uint64, maxCharges uint, regenRate time.Duration
 	return user, nil
 }
 
-func (s *service) SpendCharge(id uint64, maxCharges uint, pixelsToSpend uint, regenRate time.Duration) error {
-	user, err := s.GetByID(id)
+func (s *service) SpendCharge(id uint64, maxCharges uint, pixelsToSpend uint, regenRate time.Duration, opts ...database.Option) error {
+	fetchOpts := append([]database.Option{database.WithLock()}, opts...)
+	user, err := s.GetByID(id, fetchOpts...)
 	if err != nil {
 		return err
 	}
@@ -137,5 +139,5 @@ func (s *service) SpendCharge(id uint64, maxCharges uint, pixelsToSpend uint, re
 
 	user.Charges -= pixelsToSpend
 
-	return s.Update(user)
+	return s.Update(user, opts...)
 }
