@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"go-place/internal/config"
 	"go-place/internal/domain/auth"
 	"go-place/internal/domain/pixel"
@@ -19,6 +20,7 @@ import (
 )
 
 type App interface {
+	Start()
 	Shutdown()
 }
 
@@ -70,6 +72,15 @@ func NewApp(cfg *config.Config) App {
 		Fiber:    application,
 		wsCancel: cancel,
 	}
+}
+
+func (a *app) Start() {
+	go func() {
+		log.Info().Msg("Starting fiber application")
+		if err := a.Fiber.Listen(fmt.Sprintf(":%d", a.Config.AppPort)); err != nil {
+			log.Panic().Err(err).Msg("Error starting app")
+		}
+	}()
 }
 
 func (a *app) Shutdown() {

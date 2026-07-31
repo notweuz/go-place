@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go-place/internal/config"
 	"go-place/internal/logger"
 	"go-place/internal/server"
@@ -22,12 +21,7 @@ func main() {
 	logger.UpdateLogLevel(cfg.LogLevel)
 
 	app := server.NewApp(cfg)
-	go func() {
-		log.Info().Msg("Starting fiber application")
-		if err := app.Fiber.Listen(fmt.Sprintf(":%d", app.Config.AppPort)); err != nil {
-			log.Panic().Err(err).Msg("Error starting app")
-		}
-	}()
+	app.Start()
 
 	log.Debug().Msg("Initialized graceful shutdown")
 	quit := make(chan os.Signal, 1)
