@@ -59,7 +59,7 @@ func (r *router) setupAuthRoutes(api fiber.Router) {
 func (r *router) setupUserRoutes(api fiber.Router) {
 	log.Debug().Msg("Setting up user routes")
 	userRoute := api.Group("/user")
-	userRoute.Get("/self", r.userHandler.GetCurrentUser)
+	userRoute.Get("/self", middleware.AuthProtected(r.cfg), r.userHandler.GetCurrentUser)
 	userRoute.Get("/:id", r.userHandler.GetByID)
 }
 
