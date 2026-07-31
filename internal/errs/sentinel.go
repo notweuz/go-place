@@ -19,4 +19,5 @@ var (
 	ErrUpgradeRequired     = errors.New("upgrade required")
 	ErrNotEnoughCharges    = errors.New("not enough charges")
 	ErrPixelOutOfBounds    = errors.New("pixel out of bounds")
+	ErrJWTMalformed        = errors.New("jwt malformed")
 )
