@@ -19,6 +19,7 @@ type hub struct {
 	register   chan Client
 	unregister chan Client
 	broadcast  chan message.Base
+	ctx        context.Context
 }
 
 func NewHub() Hub {
@@ -31,22 +32,32 @@ func NewHub() Hub {
 }
 
 func (h *hub) Broadcast(msg message.Base) {
-	log.Info().Interface("message", msg).Msg("Broadcasting message to all clients")
-	h.broadcast <- msg
-	log.Info().Msg("Broadcasting complete")
+	select {
+	case h.broadcast <- msg:
+		log.Info().Interface("message", msg).Msg("Broadcasting message")
+	case <-h.ctx.Done():
+		log.Warn().Msg("Hub is shut down, broadcast skipped")
+	}
 }
-
 func (h *hub) Register(client Client) {
-	log.Info().Msg("Registering client")
-	h.register <- client
+	select {
+	case h.register <- client:
+		log.Info().Msg("Registering client")
+	case <-h.ctx.Done():
+		log.Warn().Msg("Hub is shut down, register skipped")
+	}
 }
-
 func (h *hub) Unregister(client Client) {
-	log.Info().Msg("Unregistering client")
-	h.unregister <- client
+	select {
+	case h.unregister <- client:
+		log.Info().Msg("Unregistering client")
+	case <-h.ctx.Done():
+		log.Warn().Msg("Hub is shut down, unregister skipped")
+	}
 }
 
 func (h *hub) Run(ctx context.Context) {
+	h.ctx = ctx
 	for {
 		select {
 		case <-ctx.Done():
