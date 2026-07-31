@@ -220,14 +220,18 @@ func (s *service) Update(pixel *model.Pixel) error {
 
 func (s *service) Delete(id uint64) error {
 	log.Info().Uint64("pixel_id", id).Msg("Attempting to delete pixel by id")
-	err := s.repository.Delete(id)
+	pixel, err := s.repository.GetByID(id)
 	if err != nil {
+		return err
+	}
+	if err = s.repository.Delete(id); err != nil {
 		log.Error().Err(err).Uint64("pixel_id", id).Msg("Failed to delete pixel by id")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errs.ErrPixelNotFound
 		}
 		return errs.ErrInternalServerError
 	}
+	s.patchCanvas(pixel.X, pixel.Y, "#000000")
 	return nil
 }
 
