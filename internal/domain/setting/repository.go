@@ -34,7 +34,7 @@ func (r *repository) Create(setting *model.Setting) error {
 
 func (r *repository) Get() (*model.Setting, error) {
 	log.Debug().Msg("Trying to get settings")
-	var entity *model.Setting
+	var entity model.Setting
 	err := r.db.First(&entity).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get settings")
@@ -49,7 +49,7 @@ func (r *repository) Get() (*model.Setting, error) {
 		}
 		return nil, err
 	}
-	return entity, nil
+	return &entity, nil
 }
 
 func (r *repository) Update(setting *model.Setting) error {
