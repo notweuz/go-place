@@ -13,7 +13,7 @@ import (
 type Repository interface {
 	Create(pixel *model.Pixel) error
 	Update(pixel *model.Pixel) error
-	Upsert(pixels []model.Pixel) ([]model.Pixel, error)
+	Upsert(pixels []model.Pixel, opts ...database.Option) ([]model.Pixel, error)
 	GetByID(id uint64) (*model.Pixel, error)
 	GetByCoordinates(x, y uint64) (*model.Pixel, error)
 	GetAll(opts ...database.Option) ([]model.Pixel, error)
@@ -37,9 +37,13 @@ func (r *repository) Create(pixel *model.Pixel) error {
 	return err
 }
 
-func (r *repository) Upsert(pixels []model.Pixel) ([]model.Pixel, error) {
+func (r *repository) Upsert(pixels []model.Pixel, opts ...database.Option) ([]model.Pixel, error) {
 	log.Debug().Int("count", len(pixels)).Msg("upserting pixels")
-	err := r.db.Clauses(clause.OnConflict{
+	db := r.db
+	for _, opt := range opts {
+		db = opt(db)
+	}
+	err := db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "x"}, {Name: "y"}},
 		DoUpdates: clause.AssignmentColumns([]string{"color", "user_id", "updated_at"}),
 	}).Create(&pixels).Error
