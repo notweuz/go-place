@@ -30,7 +30,7 @@ func (s *service) Create(setting *model.Setting) error {
 	err := s.repository.Create(setting)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create new settings profile")
-		return err
+		return errs.ErrInternalServerError
 	}
 	return nil
 }
@@ -40,7 +40,7 @@ func (s *service) Get() (*model.Setting, error) {
 	setting, err := s.repository.Get()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get settings profile")
-		return nil, err
+		return nil, errs.ErrInternalServerError
 	}
 	return setting, nil
 }
