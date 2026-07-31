@@ -1,8 +1,14 @@
 package websocket
 
 import (
+	"time"
+
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
+)
+
+const (
+	pongWait = 60 * time.Second
 )
 
 type Handler interface {
@@ -26,6 +32,12 @@ func (h *handler) Upgrade() fiber.Handler {
 		h.hub.Register(cl)
 		defer h.hub.Unregister(cl)
 		defer cl.Close()
+
+		c.SetReadDeadline(time.Now().Add(pongWait))
+		c.SetPongHandler(func(string) error {
+			c.SetReadDeadline(time.Now().Add(pongWait))
+			return nil
+		})
 
 		// websocket is read-only right now, so ReadMessage is used only for connection loss detection purposes
 		for {
