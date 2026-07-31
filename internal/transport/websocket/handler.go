@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -33,10 +34,13 @@ func (h *handler) Upgrade() fiber.Handler {
 		defer h.hub.Unregister(cl)
 		defer cl.Close()
 
-		c.SetReadDeadline(time.Now().Add(pongWait))
+		if err := c.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+			log.Error().Err(err).Msg("Failed to set initial read deadline")
+			return
+		}
+
 		c.SetPongHandler(func(string) error {
-			c.SetReadDeadline(time.Now().Add(pongWait))
-			return nil
+			return c.SetReadDeadline(time.Now().Add(pongWait))
 		})
 
 		// websocket is read-only right now, so ReadMessage is used only for connection loss detection purposes
