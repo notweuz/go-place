@@ -16,7 +16,10 @@ func NewMessage(event string, payload interface{}) *Base {
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to marshal payload")
-		return nil
+		return &Base{
+			Event:   event,
+			Payload: nil,
+		}
 	}
 
 	return &Base{
