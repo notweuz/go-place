@@ -6,7 +6,7 @@ type UserPublic struct {
 	ID       uint64 `json:"id"`
 	Username string `json:"username"`
 
-	CreatedAt time.Time `gorm:"autoCreateTime"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func NewUserPublic(id uint64, username string, createdAt time.Time) *UserPublic {
