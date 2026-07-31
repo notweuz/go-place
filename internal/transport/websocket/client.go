@@ -26,8 +26,13 @@ func NewClient(conn *websocket.Conn) Client {
 }
 
 func (c *client) Send(msg message.Base) {
-	log.Debug().Interface("message", msg).Msg("Sending message to client")
-	c.send <- msg
+	select {
+	case c.send <- msg:
+		log.Debug().Interface("message", msg).Msg("Sending message to client")
+	default:
+		log.Warn().Msg("Client is not ready to receive message, aborting connection")
+		c.Close()
+	}
 }
 
 func (c *client) Write() {
