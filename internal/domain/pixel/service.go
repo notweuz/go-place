@@ -37,6 +37,7 @@ type service struct {
 	settingService setting.Service
 	wsHub          websocket.Hub
 
+	once      sync.Once
 	canvasMu  sync.RWMutex
 	canvasBuf []byte
 	canvasW   uint64
@@ -96,16 +97,16 @@ func (s *service) GetAll(opts ...database.Option) ([]model.Pixel, error) {
 }
 
 func (s *service) GetBinaryCanvas() ([]byte, error) {
-	s.canvasMu.RLock()
-	if s.canvasBuf == nil {
-		s.canvasMu.RUnlock()
-		if err := s.BuildCanvas(); err != nil {
-			return nil, err
-		}
-		s.canvasMu.RLock()
+	var buildErr error
+	s.once.Do(func() {
+		buildErr = s.BuildCanvas()
+	})
+	if buildErr != nil {
+		return nil, buildErr
 	}
-	defer s.canvasMu.RUnlock()
 
+	s.canvasMu.RLock()
+	defer s.canvasMu.RUnlock()
 	out := make([]byte, len(s.canvasBuf))
 	copy(out, s.canvasBuf)
 	return out, nil
