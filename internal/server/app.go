@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"go-place/internal/config"
 	"go-place/internal/domain/auth"
 	"go-place/internal/domain/pixel"
@@ -9,6 +10,7 @@ import (
 	"go-place/internal/middleware"
 	"go-place/internal/transport/http"
 	"go-place/internal/transport/websocket"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -17,9 +19,10 @@ import (
 )
 
 type App struct {
-	DB     *gorm.DB
-	Config *config.Config
-	Fiber  *fiber.App
+	DB       *gorm.DB
+	Config   *config.Config
+	Fiber    *fiber.App
+	wsCancel context.CancelFunc
 }
 
 func NewApp(cfg *config.Config) *App {
@@ -38,8 +41,9 @@ func NewApp(cfg *config.Config) *App {
 	authSVC := auth.NewService(userSVC, settingSVC, cfg)
 	authHR := auth.NewHandler(authSVC)
 
+	ctx, cancel := context.WithCancel(context.Background())
 	wsHub := websocket.NewHub()
-	go wsHub.Run()
+	go wsHub.Run(ctx)
 
 	wsHR := websocket.NewHandler(wsHub)
 
@@ -57,8 +61,22 @@ func NewApp(cfg *config.Config) *App {
 	appRouter.Setup()
 
 	return &App{
-		DB:     db,
-		Config: cfg,
-		Fiber:  app,
+		DB:       db,
+		Config:   cfg,
+		Fiber:    app,
+		wsCancel: cancel,
 	}
+}
+
+func (a *App) Shutdown() {
+	log.Info().Msg("Shutting down server")
+	a.wsCancel()
+	log.Info().Msg("WS Hub stopped")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := a.Fiber.ShutdownWithContext(ctx); err != nil {
+		log.Panic().Err(err).Msg("Error shutting down")
+	}
+	log.Info().Msg("Server gracefully stopped")
 }

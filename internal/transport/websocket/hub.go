@@ -1,13 +1,14 @@
 package websocket
 
 import (
+	"context"
 	"go-place/internal/transport/websocket/message"
 
 	"github.com/rs/zerolog/log"
 )
 
 type Hub interface {
-	Run()
+	Run(ctx context.Context)
 	Broadcast(message message.Base)
 	Register(Client)
 	Unregister(Client)
@@ -45,9 +46,15 @@ func (h *hub) Unregister(client Client) {
 	h.unregister <- client
 }
 
-func (h *hub) Run() {
+func (h *hub) Run(ctx context.Context) {
 	for {
 		select {
+		case <-ctx.Done():
+			for cl := range h.clients {
+				cl.Close()
+				delete(h.clients, cl)
+			}
+			return
 		case cl := <-h.register:
 			if _, ok := h.clients[cl]; !ok {
 				log.Info().Msg("New websocket client registered")
