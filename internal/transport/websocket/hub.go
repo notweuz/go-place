@@ -25,9 +25,9 @@ type hub struct {
 func NewHub(ctx context.Context) Hub {
 	return &hub{
 		clients:    make(map[Client]bool),
-		register:   make(chan Client),
-		unregister: make(chan Client),
-		broadcast:  make(chan message.Base),
+		register:   make(chan Client, 256),
+		unregister: make(chan Client, 256),
+		broadcast:  make(chan message.Base, 256),
 		ctx:        ctx,
 	}
 }
