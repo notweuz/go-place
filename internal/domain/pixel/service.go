@@ -92,19 +92,26 @@ func (s *service) Change(pixels []request.ChangePixel, newAuthor uint64) ([]mode
 		return nil, err
 	}
 
+	dedupedMap := make(map[struct{ X, Y uint64 }]request.ChangePixel, len(pixels))
 	for _, p := range pixels {
 		if p.X >= settings.CanvasWidth || p.Y >= settings.CanvasHeight {
 			return nil, errs.ErrPixelOutOfBounds
 		}
+		dedupedMap[struct{ X, Y uint64 }{X: p.X, Y: p.Y}] = p
 	}
 
-	err = s.userService.SpendCharge(newAuthor, settings.MaxCharges, uint(len(pixels)), time.Duration(settings.CooldownSeconds)*time.Second)
+	dedupedPixels := make([]request.ChangePixel, 0, len(dedupedMap))
+	for _, p := range dedupedMap {
+		dedupedPixels = append(dedupedPixels, p)
+	}
+
+	err = s.userService.SpendCharge(newAuthor, settings.MaxCharges, uint(len(dedupedPixels)), time.Duration(settings.CooldownSeconds)*time.Second)
 	if err != nil {
 		return nil, err
 	}
 
-	models := make([]model.Pixel, len(pixels))
-	for i, p := range pixels {
+	models := make([]model.Pixel, len(dedupedPixels))
+	for i, p := range dedupedPixels {
 		models[i] = model.Pixel{X: p.X, Y: p.Y, Color: p.Color, UserID: newAuthor}
 	}
 
