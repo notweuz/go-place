@@ -13,12 +13,9 @@ func Logger(ctx fiber.Ctx) error {
 
 	err := ctx.Next()
 	latency := time.Since(start)
+
 	if err != nil {
-		if handleErr := ctx.App().ErrorHandler(ctx, err); handleErr != nil {
-			_ = ctx.Status(fiber.StatusInternalServerError).SendString(handleErr.Error())
-		}
-		log.Error().Err(err).Msgf("HTTP %s %s failed with status %d in %v", ctx.Method(), ctx.Path(), ctx.Response().StatusCode(), latency)
-		return nil
+		return err
 	}
 
 	log.Info().Msgf("HTTP %s %s completed with status %d in %v", ctx.Method(), ctx.Path(), ctx.Response().StatusCode(), latency)
