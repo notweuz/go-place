@@ -117,7 +117,7 @@ func (s *service) Change(x, y uint64, color string, newAuthor uint64) (*model.Pi
 
 	pixel.Color = color
 	pixel.UserID = newAuthor
-	err = s.repository.Update(pixel)
+	err = s.Update(pixel)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update pixel")
 		return nil, err
