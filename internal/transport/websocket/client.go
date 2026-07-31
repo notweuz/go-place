@@ -65,5 +65,6 @@ func (c *client) Close() {
 			log.Error().Err(err).Msg("Failed to close connection with client")
 		}
 		close(c.done)
+		close(c.send)
 	})
 }
