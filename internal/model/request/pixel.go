@@ -7,5 +7,5 @@ type ChangePixel struct {
 }
 
 type ChangePixels struct {
-	Pixels []ChangePixel `json:"pixels" validate:"required,min=1,dive"`
+	Pixels []ChangePixel `json:"pixels" validate:"required,min=1,max=25,dive"`
 }
