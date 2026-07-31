@@ -12,3 +12,13 @@ type Setting struct {
 
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 }
+
+func NewDefaultSetting() *Setting {
+	return &Setting{
+		CanvasWidth:      1000,
+		CanvasHeight:     1000,
+		CooldownSeconds:  30,
+		MaxCharges:       5,
+		RegistrationOpen: true,
+	}
+}

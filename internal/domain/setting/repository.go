@@ -39,13 +39,13 @@ func (r *repository) Get() (*model.Setting, error) {
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get settings")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			setting := model.Setting{}
-			err2 := r.Create(&setting)
+			setting := model.NewDefaultSetting()
+			err2 := r.Create(setting)
 			if err2 != nil {
 				log.Error().Err(err2).Msg("Failed to create setting")
 				return nil, err2
 			}
-			return &setting, nil
+			return setting, nil
 		}
 		return nil, err
 	}
