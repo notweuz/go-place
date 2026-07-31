@@ -3,6 +3,7 @@ package websocket
 import (
 	"go-place/internal/transport/websocket/message"
 	"sync"
+	"time"
 
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/rs/zerolog/log"
@@ -15,17 +16,19 @@ type Client interface {
 }
 
 type client struct {
-	conn *websocket.Conn
-	send chan message.Base
-	done chan struct{}
-	once sync.Once
+	conn      *websocket.Conn
+	send      chan message.Base
+	heartbeat *time.Ticker
+	done      chan struct{}
+	once      sync.Once
 }
 
 func NewClient(conn *websocket.Conn) Client {
 	return &client{
-		conn: conn,
-		send: make(chan message.Base, 64),
-		done: make(chan struct{}),
+		conn:      conn,
+		send:      make(chan message.Base, 64),
+		heartbeat: time.NewTicker(50 * time.Second),
+		done:      make(chan struct{}),
 	}
 }
 
@@ -42,12 +45,20 @@ func (c *client) Send(msg message.Base) {
 }
 
 func (c *client) Write() {
+	defer c.heartbeat.Stop()
+
 	for {
 		select {
 		case msg := <-c.send:
 			err := c.conn.WriteJSON(msg)
 			if err != nil {
 				log.Error().Err(err).Msg("Error writing to client")
+				c.Close()
+				return
+			}
+		case <-c.heartbeat.C:
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.Error().Err(err).Msg("Error while pinging client")
 				c.Close()
 				return
 			}
