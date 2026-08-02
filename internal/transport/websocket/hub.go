@@ -72,9 +72,7 @@ func (h *hub) Run() {
 				h.clients[cl] = true
 			}
 		case cl := <-h.unregister:
-			if _, ok := h.clients[cl]; ok {
-				delete(h.clients, cl)
-			}
+			delete(h.clients, cl)
 		case msg := <-h.broadcast:
 			for cl := range h.clients {
 				cl.Send(msg)
