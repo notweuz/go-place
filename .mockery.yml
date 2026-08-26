@@ -1,0 +1,11 @@
+all: false
+dir: '{{ replaceAll "internal" "internal/mocks" .InterfaceDirRelative }}'
+filename: "mock_{{ .InterfaceName | snakecase }}.go"
+template: testify
+packages:
+  go-place/internal:
+    config:
+      all: true
+      recursive: true
+      exclude-subpkg-regex:
+        - ".*mocks.*"
