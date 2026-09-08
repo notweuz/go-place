@@ -13,6 +13,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// TODO: move all const to a header of this file ^^^
 func GenerateToken(userID uint64, secret string) (string, error) {
 	claims := Claims{
 		UserID: userID,

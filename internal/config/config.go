@@ -16,6 +16,7 @@ type Config struct {
 	AppPort     int
 }
 
+// TODO: move all const to a header of this file ^^^
 func NewConfig() (*Config, error) {
 	cfg := &Config{}
 
