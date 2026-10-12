@@ -6,6 +6,7 @@ import (
 	"go-place/internal/server"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/rs/zerolog/log"
 )
@@ -25,7 +26,7 @@ func main() {
 
 	log.Debug().Msg("Initialized graceful shutdown")
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
+	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	<-quit
 	app.Shutdown()
