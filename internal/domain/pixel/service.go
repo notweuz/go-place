@@ -32,6 +32,8 @@ type Service interface {
 }
 
 type service struct {
+	db             *gorm.DB
+	writeMu        sync.Mutex
 	repository     Repository
 	userService    user.Service
 	settingService setting.Service
@@ -44,11 +46,13 @@ type service struct {
 	canvasH   uint64
 }
 
-func NewService(repository Repository, userService user.Service, settingService setting.Service, wsHub websocket.Hub) Service {
-	return &service{repository: repository, userService: userService, settingService: settingService, wsHub: wsHub}
+func NewService(repository Repository, userService user.Service, settingService setting.Service, wsHub websocket.Hub, db *gorm.DB) Service {
+	return &service{db: db, repository: repository, userService: userService, settingService: settingService, wsHub: wsHub}
 }
 
 func (s *service) Create(pixel *model.Pixel) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	log.Info().Uint64("pixel_id", pixel.ID).Uint64("x", pixel.X).Uint64("y", pixel.Y).Msg("Attempting to create pixel")
 	err := s.repository.Create(pixel)
 	if err != nil {
@@ -74,6 +78,13 @@ func (s *service) GetByID(id uint64) (*model.Pixel, error) {
 }
 
 func (s *service) GetByCoordinates(x, y uint64) (*model.Pixel, error) {
+	settings, err := s.settingService.Get()
+	if err != nil {
+		return nil, err
+	}
+	if x >= settings.CanvasWidth || y >= settings.CanvasHeight {
+		return nil, errs.ErrPixelOutOfBounds
+	}
 	log.Info().Uint64("x", x).Uint64("y", y).Msg("Attempting to get pixel by coordinates")
 	entity, err := s.repository.GetByCoordinates(x, y)
 	if err != nil {
@@ -124,9 +135,14 @@ func (s *service) GetBinaryCanvas() ([]byte, error) {
 }
 
 func (s *service) BuildCanvas() error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	settings, err := s.settingService.Get()
 	if err != nil {
 		return err
+	}
+	if err := settings.Validate(); err != nil {
+		return errs.Internal(err)
 	}
 	w, h := settings.CanvasWidth, settings.CanvasHeight
 	pixels, err := s.GetAll()
@@ -155,19 +171,25 @@ func (s *service) BuildCanvas() error {
 }
 
 func (s *service) patchCanvas(x, y uint64, color string) {
+	s.patchCanvasBatch([]model.Pixel{{X: x, Y: y, Color: color}})
+}
+
+func (s *service) patchCanvasBatch(pixels []model.Pixel) {
 	s.canvasMu.Lock()
 	defer s.canvasMu.Unlock()
-
-	if s.canvasBuf == nil || x >= s.canvasW || y >= s.canvasH {
-		return
+	for _, p := range pixels {
+		if s.canvasBuf == nil || p.X >= s.canvasW || p.Y >= s.canvasH {
+			continue
+		}
+		index := 8 + (p.Y*s.canvasW+p.X)*3
+		r, g, b := parseHexToRGB(p.Color)
+		s.canvasBuf[index], s.canvasBuf[index+1], s.canvasBuf[index+2] = r, g, b
 	}
-
-	index := 8 + (y*s.canvasW+x)*3
-	r, g, b := parseHexToRGB(color)
-	s.canvasBuf[index], s.canvasBuf[index+1], s.canvasBuf[index+2] = r, g, b
 }
 
 func (s *service) Change(pixels []request.ChangePixel, newAuthor uint64) ([]model.Pixel, error) {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	log.Info().Int("count", len(pixels)).Uint64("author", newAuthor).Msg("Attempting to change pixels")
 
 	settings, err := s.settingService.Get()
@@ -188,26 +210,32 @@ func (s *service) Change(pixels []request.ChangePixel, newAuthor uint64) ([]mode
 		dedupedPixels = append(dedupedPixels, p)
 	}
 
-	err = s.userService.SpendCharge(newAuthor, uint(len(dedupedPixels)))
-	if err != nil {
-		return nil, err
-	}
-
 	models := make([]model.Pixel, len(dedupedPixels))
 	for i, p := range dedupedPixels {
 		models[i] = model.Pixel{X: p.X, Y: p.Y, Color: p.Color, UserID: newAuthor}
 	}
 
-	result, err := s.repository.Upsert(models)
+	var result []model.Pixel
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.userService.SpendCharge(newAuthor, uint(len(models)), database.WithTx(tx)); err != nil {
+			return err
+		}
+		var err error
+		result, err = s.repository.Upsert(models, database.WithTx(tx))
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to upsert pixels")
+			return errs.Internal(err)
+		}
+		return nil
+	})
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to upsert pixels")
-		return nil, errs.ErrInternalServerError
+		return nil, err
 	}
+	s.patchCanvasBatch(result)
 
 	changed := make([]message.PixelChanged, len(result))
 	for i, px := range result {
 		changed[i] = *message.NewPixelChanged(px.ID, px.X, px.Y, px.UserID, px.Color)
-		s.patchCanvas(px.X, px.Y, px.Color)
 	}
 	s.wsHub.Broadcast(*message.NewMessage(message.EventPixelsChanged, message.NewPixelsChanged(changed)))
 
@@ -215,6 +243,8 @@ func (s *service) Change(pixels []request.ChangePixel, newAuthor uint64) ([]mode
 }
 
 func (s *service) Update(pixel *model.Pixel) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	log.Info().Uint64("pixel_id", pixel.ID).Msg("Attempting to update pixel")
 	err := s.repository.Update(pixel)
 	if err != nil {
@@ -230,6 +260,8 @@ func (s *service) Update(pixel *model.Pixel) error {
 }
 
 func (s *service) Delete(id uint64) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 	log.Info().Uint64("pixel_id", id).Msg("Attempting to delete pixel by id")
 	pixel, err := s.repository.GetByID(id)
 	if err != nil {
