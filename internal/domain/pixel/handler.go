@@ -27,7 +27,10 @@ func NewHandler(service Service) Handler {
 }
 
 func (h *handler) GetByID(ctx fiber.Ctx) error {
-	id := fiber.Params[uint64](ctx, "id")
+	id, err := validation.ParseUint64(ctx.Params("id"), "id", false)
+	if err != nil {
+		return err
+	}
 	pixel, err := h.service.GetByID(id)
 	if err != nil {
 		return err
@@ -39,8 +42,14 @@ func (h *handler) GetByID(ctx fiber.Ctx) error {
 }
 
 func (h *handler) GetByCoordinates(ctx fiber.Ctx) error {
-	x := fiber.Query[uint64](ctx, "x")
-	y := fiber.Query[uint64](ctx, "y")
+	x, err := validation.ParseUint64(ctx.Query("x"), "x", true)
+	if err != nil {
+		return err
+	}
+	y, err := validation.ParseUint64(ctx.Query("y"), "y", true)
+	if err != nil {
+		return err
+	}
 	pixel, err := h.service.GetByCoordinates(x, y)
 	if err != nil {
 		return err
