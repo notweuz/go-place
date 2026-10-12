@@ -13,7 +13,8 @@ import (
 func SetupDatabase(cfg *config.Config) (*gorm.DB, error) {
 	dsn := cfg.DatabaseDSN
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger:         logger.Default.LogMode(logger.Silent),
+		TranslateError: true,
 	})
 	if err != nil {
 		return nil, err
