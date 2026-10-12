@@ -26,6 +26,9 @@ func NewService(repository Repository) Service {
 }
 
 func (s *service) Create(setting *model.Setting) error {
+	if err := setting.Validate(); err != nil {
+		return errs.BadRequest(err, err.Error())
+	}
 	log.Info().Interface("settings", setting).Msg("Attempting to create new settings profile")
 	err := s.repository.Create(setting)
 	if err != nil {
@@ -42,10 +45,16 @@ func (s *service) Get() (*model.Setting, error) {
 		log.Error().Err(err).Msg("Failed to get settings profile")
 		return nil, errs.ErrInternalServerError
 	}
+	if err := setting.Validate(); err != nil {
+		return nil, errs.Internal(err)
+	}
 	return setting, nil
 }
 
 func (s *service) Update(setting *model.Setting) error {
+	if err := setting.Validate(); err != nil {
+		return errs.BadRequest(err, err.Error())
+	}
 	log.Info().Interface("settings", setting).Msg("Attempting to update settings profile")
 	err := s.repository.Update(setting)
 	if err != nil {
