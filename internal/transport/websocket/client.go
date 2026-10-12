@@ -9,6 +9,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const writeWait = 10 * time.Second
+
 type Client interface {
 	Send(msg message.Base)
 	Write()
@@ -46,22 +48,46 @@ func (c *client) Send(msg message.Base) {
 
 func (c *client) Write() {
 	defer c.heartbeat.Stop()
+	defer c.Close()
 
 	for {
 		select {
 		case msg := <-c.send:
-			err := c.conn.WriteJSON(msg)
-			if err != nil {
-				log.Error().Err(err).Msg("Error writing to client")
-				c.Close()
+			if err := c.conn.SetWriteDeadline(
+				time.Now().Add(writeWait),
+			); err != nil {
+				log.Error().
+					Err(err).
+					Msg("Failed to set write deadline")
 				return
 			}
+
+			if err := c.conn.WriteJSON(msg); err != nil {
+				log.Error().
+					Err(err).
+					Msg("Error writing to client")
+				return
+			}
+
 		case <-c.heartbeat.C:
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log.Error().Err(err).Msg("Error while pinging client")
-				c.Close()
+			if err := c.conn.SetWriteDeadline(
+				time.Now().Add(writeWait),
+			); err != nil {
+				log.Error().
+					Err(err).
+					Msg("Failed to set ping deadline")
 				return
 			}
+
+			if err := c.conn.WriteMessage(
+				websocket.PingMessage, nil,
+			); err != nil {
+				log.Error().
+					Err(err).
+					Msg("Error while pinging client")
+				return
+			}
+
 		case <-c.done:
 			return
 		}

@@ -44,6 +44,7 @@ func (h *handler) Upgrade() fiber.Handler {
 		})
 
 		// websocket is read-only right now, so ReadMessage is used only for connection loss detection purposes
+		c.SetReadLimit(1024)
 		for {
 			if _, _, err := c.ReadMessage(); err != nil {
 				break
